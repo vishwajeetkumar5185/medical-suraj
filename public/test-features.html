@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Features - Dawalo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f7fa;
+        }
+        .test-card {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .test-card h2 {
+            margin-top: 0;
+            color: #1a1a1a;
+        }
+        .test-link {
+            display: inline-block;
+            background: #3B82F6;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            text-decoration: none;
+            margin: 10px 10px 10px 0;
+            font-weight: bold;
+        }
+        .test-link:hover {
+            background: #2563EB;
+        }
+        .status {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        .status.working {
+            background: #D1FAE5;
+            color: #065F46;
+        }
+        .status.check {
+            background: #FEF3C7;
+            color: #92400E;
+        }
+        .info {
+            background: #EEF2FF;
+            padding: 15px;
+            border-left: 4px solid #3B82F6;
+            border-radius: 6px;
+            margin: 15px 0;
+        }
+        .error-fix {
+            background: #FEE2E2;
+            padding: 15px;
+            border-left: 4px solid #EF4444;
+            border-radius: 6px;
+            margin: 15px 0;
+        }
+        code {
+            background: #1F2937;
+            color: #10B981;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Dawalo - Feature Testing Dashboard</h1>
+    
+    <div class="test-card">
+        <h2>🏠 Homepage Test</h2>
+        <a href="http://127.0.0.1:8000" class="test-link" target="_blank">Open Homepage</a>
+        <span class="status working">✓ Working</span>
+        
+        <div class="info">
+            <strong>Check karo:</strong>
+            <ul>
+                <li>Location name header mein dikhe</li>
+                <li>"Popular Dawaiyan" section visible ho</li>
+                <li>"Nearby Pharmacies" section visible ho</li>
+                <li>Pharmacy cards pe distance badge dikhe (if location allowed)</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="test-card">
+        <h2>💊 Popular Medicines Page</h2>
+        <a href="http://127.0.0.1:8000/popular-medicines" class="test-link" target="_blank">Open Popular Medicines</a>
+        <span class="status check">⚡ Test Now</span>
+        
+        <div class="info">
+            <strong>Expected:</strong>
+            <ul>
+                <li>Grid of medicines (2 columns)</li>
+                <li>"Add to Cart" buttons</li>
+                <li>Pagination at bottom</li>
+                <li>"HOT 🔥" badges on top items</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="test-card">
+        <h2>🏥 Nearby Pharmacies Page</h2>
+        <a href="http://127.0.0.1:8000/nearby-pharmacies" class="test-link" target="_blank">Open Nearby Pharmacies</a>
+        <span class="status check">⚡ Test Now</span>
+        
+        <div class="info">
+            <strong>Expected:</strong>
+            <ul>
+                <li>List of all pharmacies</li>
+                <li>Distance badges: "🚗 X.X km away"</li>
+                <li>"TOP 1", "TOP 2", "TOP 3" badges</li>
+                <li>Sorted by distance (if location enabled)</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="test-card">
+        <h2>🔍 Search by Category</h2>
+        <a href="http://127.0.0.1:8000/search?q=Fever" class="test-link" target="_blank">Search Fever</a>
+        <a href="http://127.0.0.1:8000/search?q=Pain" class="test-link" target="_blank">Search Pain</a>
+        <a href="http://127.0.0.1:8000/search?q=Diabetes" class="test-link" target="_blank">Search Diabetes</a>
+        <span class="status working">✓ Working</span>
+        
+        <div class="info">
+            <strong>Expected:</strong> Search results page with filtered medicines
+        </div>
+    </div>
+
+    <div class="test-card">
+        <h2>⚠️ Console Errors (Ignore These)</h2>
+        <div class="error-fix">
+            <strong>Ye errors normal hain aur functionality affect nahi karte:</strong>
+            <ul>
+                <li><code>Tracking Prevention blocked</code> - Browser privacy setting, ignore karo</li>
+                <li><code>GPS failed or blocked</code> - Location permission denied, default location use hoga</li>
+                <li><code>Leaflet CSS blocked</code> - Privacy feature, map feature affect nahi hota</li>
+            </ul>
+            <p><strong>Solution:</strong> In errors ko ignore karo. Actual features kaam kar rahe hain!</p>
+        </div>
+    </div>
+
+    <div class="test-card">
+        <h2>📍 Location Features</h2>
+        <div class="info">
+            <strong>Distance Calculation:</strong>
+            <ul>
+                <li>Agar location allowed → Distance dikhega pharmacy cards pe</li>
+                <li>Agar location denied → Default location use hoga (no distance)</li>
+                <li>Pharmacies phir bhi kaam karengi, bas sorting nahi hogi</li>
+            </ul>
+        </div>
+        
+        <p><strong>Manual Location Test:</strong></p>
+        <a href="http://127.0.0.1:8000/set-location?city=Muzaffarpur&lat=26.1225&lng=85.3906" class="test-link" target="_blank">Set Muzaffarpur</a>
+        <a href="http://127.0.0.1:8000/set-location?city=Patna&lat=25.5941&lng=85.1376" class="test-link" target="_blank">Set Patna</a>
+        <p><em>Location set karne ke baad homepage refresh karo</em></p>
+    </div>
+
+    <div class="test-card">
+        <h2>✅ Success Checklist</h2>
+        <p>Ye sab features test karo:</p>
+        <ol>
+            <li>✓ Homepage loads properly</li>
+            <li>✓ "Popular Dawaiyan → View All" opens new page</li>
+            <li>✓ "Nearby Pharmacies → View All" opens new page</li>
+            <li>✓ Popular medicines page shows grid</li>
+            <li>✓ Nearby pharmacies page shows list</li>
+            <li>✓ Category search works (click category on homepage)</li>
+            <li>✓ Distance shows if location enabled</li>
+            <li>✓ Add to cart works on popular medicines page</li>
+        </ol>
+    </div>
+
+    <div class="test-card">
+        <h2>🔄 Quick Actions</h2>
+        <a href="http://127.0.0.1:8000" class="test-link" target="_blank">← Back to Homepage</a>
+        <button onclick="location.reload()" class="test-link" style="border: none; cursor: pointer;">🔄 Refresh Page</button>
+    </div>
+
+    <script>
+        console.log('✅ Test Dashboard Loaded');
+        console.log('🔗 All test links are ready!');
+        console.log('💡 Tip: Open browser console (F12) to see real-time logs');
+    </script>
+</body>
+</html>

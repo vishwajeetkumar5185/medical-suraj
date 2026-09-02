@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Set Test Location - Dawalo</title>
+    <style>
+        body { 
+            font-family: Arial; 
+            max-width: 600px; 
+            margin: 50px auto; 
+            padding: 20px; 
+            background: #f5f7fa;
+        }
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        h1 { color: #1a1a1a; margin-top: 0; }
+        button {
+            background: #3B82F6;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            margin: 5px;
+        }
+        button:hover { background: #2563EB; }
+        .info {
+            background: #EEF2FF;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border-left: 4px solid #3B82F6;
+        }
+        .success {
+            background: #D1FAE5;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border-left: 4px solid #10B981;
+            display: none;
+        }
+        code {
+            background: #1F2937;
+            color: #10B981;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>🧪 Nearby Pharmacies - Distance Test</h1>
+        
+        <div class="info">
+            <strong>📍 Problem:</strong> Distance nahi dikh raha pharmacy cards pe?<br>
+            <strong>✅ Solution:</strong> Manually location set karo neeche ke buttons se
+        </div>
+
+        <h3>Step 1: Location Set Karo</h3>
+        <p>Apne city ke according button click karo:</p>
+        
+        <button onclick="setLocation('Muzaffarpur', 26.1225, 85.3906)">📍 Set Muzaffarpur</button>
+        <button onclick="setLocation('Patna', 25.5941, 85.1376)">📍 Set Patna</button>
+        <button onclick="setLocation('Jaipur', 26.9124, 75.7873)">📍 Set Jaipur</button>
+        <button onclick="setLocation('Darbhanga', 26.1558, 85.8958)">📍 Set Darbhanga</button>
+
+        <div id="success" class="success">
+            ✅ <strong>Location set ho gaya!</strong> Ab homepage refresh karo.
+        </div>
+
+        <hr style="margin: 30px 0;">
+
+        <h3>Step 2: Homepage Check Karo</h3>
+        <p>Location set karne ke baad homepage pe jao aur dekho:</p>
+        <a href="http://127.0.0.1:8000" target="_blank">
+            <button style="background: #10B981;">🏠 Open Homepage</button>
+        </a>
+
+        <hr style="margin: 30px 0;">
+
+        <h3>Step 3: Nearby Pharmacies Page</h3>
+        <p>Direct nearby pharmacies page open karo:</p>
+        <a href="http://127.0.0.1:8000/nearby-pharmacies" target="_blank">
+            <button style="background: #F59E0B;">🏥 Open Nearby Pharmacies</button>
+        </a>
+
+        <hr style="margin: 30px 0;">
+
+        <h3>🔍 Debug Info</h3>
+        <p>Check karo shops ka data aur current location:</p>
+        <a href="http://127.0.0.1:8000/debug-shops" target="_blank">
+            <button style="background: #EF4444;">🐛 Open Debug Page</button>
+        </a>
+
+        <hr style="margin: 30px 0;">
+
+        <h3>Expected Result:</h3>
+        <div class="info">
+            <strong>Homepage pe dikhn a chahiye:</strong><br>
+            • Pharmacy cards pe distance badge: <code>🚗 2.3 km</code><br>
+            • Nearest pharmacy pehle dikhna chahiye<br>
+            <br>
+            <strong>Nearby Pharmacies page pe:</strong><br>
+            • Sabhi pharmacies sorted by distance<br>
+            • "TOP 1", "TOP 2", "TOP 3" badges<br>
+            • Distance in blue badge: <code>🚗 X.X km away</code>
+        </div>
+    </div>
+
+    <script>
+        function setLocation(city, lat, lng) {
+            const url = `http://127.0.0.1:8000/set-location?city=${encodeURIComponent(city)}&lat=${lat}&lng=${lng}`;
+            
+            fetch(url)
+                .then(res => res.json())
+                .then(data => {
+                    console.log('Location set:', data);
+                    document.getElementById('success').style.display = 'block';
+                    document.getElementById('success').innerHTML = `
+                        ✅ <strong>Location set ho gaya!</strong><br>
+                        📍 City: ${city}<br>
+                        🗺️ Lat: ${lat}, Lng: ${lng}<br>
+                        <br>
+                        Ab homepage refresh karo ya neeche ke button se open karo.
+                    `;
+                })
+                .catch(err => {
+                    alert('Error: ' + err);
+                    console.error(err);
+                });
+        }
+
+        console.log('✅ Location setter page loaded');
+        console.log('💡 Click kisi bhi location button pe');
+    </script>
+</body>
+</html>
