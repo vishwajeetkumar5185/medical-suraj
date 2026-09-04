@@ -4,7 +4,21 @@
 @section('content')
 
 <style>
+  .navbar-wrapper { display: none !important; }
+  .footer-wrapper { display: none !important; }
+  #app { padding: 0 !important; max-width: 100% !important; margin: 0 !important; }
   body { background: #F5F7FA !important; }
+  .screen { overflow: visible !important; height: auto !important; min-height: 100vh !important; }
+  
+  /* Smooth transitions for cards */
+  .medicine-card-grid {
+    transition: all 0.2s ease;
+  }
+  
+  .medicine-card-grid:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12) !important;
+  }
 </style>
 
 <div style="min-height:100vh; background:#F5F7FA; padding-bottom:80px;">
@@ -31,21 +45,21 @@
     @if($medicines->count() > 0)
       <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:14px; margin-bottom:20px;">
         @foreach($medicines as $medicine)
-        <div style="background:#fff; border-radius:16px; padding:14px; box-shadow:0 2px 8px rgba(0,0,0,0.06); position:relative;">
+        <div class="medicine-card-grid" style="background:#fff; border-radius:16px; padding:14px; box-shadow:0 2px 8px rgba(0,0,0,0.06); position:relative;">
           
           @if($loop->index < 3)
             <div style="position:absolute; top:10px; left:10px; background:#10B981; color:#fff; font-size:10px; font-weight:800; padding:4px 8px; border-radius:6px; z-index:1;">HOT 🔥</div>
           @endif
           
           <a href="{{ url('/medicine/'.$medicine->id) }}" style="text-decoration:none; display:block;">
-            <div style="width:100%; height:130px; background:#F3F4F6; border-radius:12px; margin-bottom:12px; display:flex; align-items:center; justify-content:center; overflow:hidden;">
+            <div style="width:100%; height:130px; background:#F8FAFC; border-radius:12px; margin-bottom:12px; display:flex; align-items:center; justify-content:center; overflow:hidden; padding:10px;">
               @if($medicine->images)
                 @php
                   $images = is_array($medicine->images) ? $medicine->images : json_decode($medicine->images, true);
                   $firstImage = is_array($images) && !empty($images) ? $images[0] : null;
                 @endphp
                 @if($firstImage)
-                  <img src="{{ asset($firstImage) }}" style="width:100%; height:100%; object-fit:contain;" alt="{{ $medicine->name }}">
+                  <img src="{{ asset($firstImage) }}" style="max-width:100%; max-height:100%; width:auto; height:auto; object-fit:contain;" alt="{{ $medicine->name }}">
                 @else
                   <span style="font-size:60px;">{{ $medicine->emoji ?? '💊' }}</span>
                 @endif

@@ -11,6 +11,31 @@
   #app { padding: 0 !important; max-width: 100% !important; margin: 0 !important; }
   body { background: #F5F7FA !important; }
   .screen { overflow: visible !important; height: auto !important; min-height: 100vh !important; }
+  
+  /* Hide scrollbar for Popular Dawaiyan section */
+  div[style*="overflow-x:auto"]::-webkit-scrollbar {
+    display: none;
+  }
+  
+  div[style*="overflow-x:auto"] {
+    scroll-behavior: smooth;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  
+  /* Add hover effect for medicine cards */
+  .medicine-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12) !important;
+  }
+  
+  .medicine-card {
+    transition: all 0.2s ease;
+  }
+  
+  .medicine-card button:hover {
+    background: #2563EB !important;
+  }
 </style>
 <div class="screen" style="background:#F5F7FA; min-height:100vh; display:block !important;">
   <!-- === HEADER === -->
@@ -194,26 +219,30 @@
 
       <!-- Popular Dawaiyan -->
       <div style="margin-bottom:20px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; position:relative; z-index:10;">
           <h3 style="font-size:17px; font-weight:800; color:#1A1A1A; margin:0;">Popular Dawaiyan</h3>
-          <a href="{{ url('/popular-medicines') }}" style="color:#3B82F6; font-size:13px; font-weight:700; text-decoration:none;">View All ›</a>
+          <a href="{{ url('/popular-medicines') }}" 
+             onclick="console.log('View All clicked'); return true;" 
+             style="color:#3B82F6; font-size:13px; font-weight:700; text-decoration:none; cursor:pointer; padding:4px 8px; border-radius:6px; transition:background 0.2s ease; position:relative; z-index:100;" 
+             onmouseover="this.style.background='#EFF6FF'" 
+             onmouseout="this.style.background='transparent'">View All ›</a>
         </div>
         
-        <div style="display:flex; gap:12px; overflow-x:auto; padding-bottom:8px;">
+        <div id="popular-medicines-carousel" style="display:flex; gap:12px; overflow-x:auto; padding-bottom:8px; -webkit-overflow-scrolling:touch; scrollbar-width:none; -ms-overflow-style:none;">
           @foreach($popularMedicines as $index => $medicine)
-          <div style="min-width:140px; background:#fff; border-radius:14px; padding:12px; box-shadow:0 2px 8px rgba(0,0,0,0.06); position:relative;">
+          <div class="medicine-card" style="min-width:150px; max-width:150px; background:#fff; border-radius:16px; padding:14px; box-shadow:0 2px 12px rgba(0,0,0,0.08); position:relative; flex-shrink:0;">
             @if($index == 0)
-              <div style="position:absolute; top:8px; left:8px; background:#10B981; color:#fff; font-size:10px; font-weight:800; padding:4px 8px; border-radius:6px;">10% OFF</div>
+              <div style="position:absolute; top:10px; left:10px; background:#10B981; color:#fff; font-size:10px; font-weight:800; padding:5px 10px; border-radius:8px; z-index:1;">10% OFF</div>
             @endif
             <a href="{{ url('/medicine/'.$medicine->id) }}" style="text-decoration:none; display:block;">
-              <div style="width:100%; height:80px; background:#F3F4F6; border-radius:10px; margin-bottom:10px; display:flex; align-items:center; justify-content:center; overflow:hidden;">
+              <div style="width:100%; height:100px; background:#F8FAFC; border-radius:12px; margin-bottom:12px; display:flex; align-items:center; justify-content:center; overflow:hidden; padding:8px;">
                 @if($medicine->images)
                   @php
                     $images = is_array($medicine->images) ? $medicine->images : json_decode($medicine->images, true);
                     $firstImage = is_array($images) && !empty($images) ? $images[0] : null;
                   @endphp
                   @if($firstImage)
-                    <img src="{{ asset($firstImage) }}" style="width:100%; height:100%; object-fit:contain;" alt="{{ $medicine->name }}">
+                    <img src="{{ asset($firstImage) }}" style="max-width:100%; max-height:100%; width:auto; height:auto; object-fit:contain;" alt="{{ $medicine->name }}">
                   @else
                     <span style="font-size:48px;">{{ $medicine->emoji ?? '💊' }}</span>
                   @endif
@@ -221,13 +250,13 @@
                   <span style="font-size:48px;">{{ $medicine->emoji ?? '💊' }}</span>
                 @endif
               </div>
-              <div style="font-size:13px; font-weight:800; color:#1A1A1A; margin-bottom:4px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ $medicine->name }}</div>
-              <div style="display:flex; align-items:center; gap:6px; margin-bottom:8px;">
+              <div style="font-size:13px; font-weight:800; color:#1A1A1A; margin-bottom:6px; overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; line-height:1.3; min-height:34px;">{{ $medicine->name }}</div>
+              <div style="display:flex; align-items:center; gap:6px; margin-bottom:10px; flex-wrap:wrap;">
                 @if($medicine->mrp && $medicine->price < $medicine->mrp)
-                  <span style="font-size:14px; font-weight:800; color:#1A1A1A;">₹{{ number_format($medicine->price, 0) }}</span>
+                  <span style="font-size:15px; font-weight:800; color:#1A1A1A;">₹{{ number_format($medicine->price, 0) }}</span>
                   <span style="font-size:11px; color:#94A3B8; text-decoration:line-through;">₹{{ number_format($medicine->mrp, 0) }}</span>
                 @else
-                  <span style="font-size:14px; font-weight:800; color:#1A1A1A;">₹{{ number_format($medicine->price, 0) }}</span>
+                  <span style="font-size:15px; font-weight:800; color:#1A1A1A;">₹{{ number_format($medicine->price, 0) }}</span>
                 @endif
               </div>
             </a>
@@ -235,7 +264,7 @@
               @csrf
               <input type="hidden" name="medicine_id" value="{{ $medicine->id }}">
               <input type="hidden" name="quantity" value="1">
-              <button type="submit" style="width:100%; background:#3B82F6; color:#fff; border:none; border-radius:8px; padding:8px; font-size:12px; font-weight:700; cursor:pointer;">+ Add</button>
+              <button type="submit" style="width:100%; background:#3B82F6; color:#fff; border:none; border-radius:10px; padding:10px; font-size:13px; font-weight:800; cursor:pointer; transition:background 0.2s ease;">+ Add</button>
             </form>
           </div>
           @endforeach
@@ -468,6 +497,62 @@
   // Initial filter: Nearby <= 5km by default
   document.addEventListener('DOMContentLoaded', function() {
     filterPharmacies('nearby');
+    
+    // Auto-scroll for Popular Dawaiyan section
+    const popularContainer = document.getElementById('popular-medicines-carousel');
+    if (popularContainer) {
+      let scrollInterval;
+      let isUserScrolling = false;
+      let scrollTimeout;
+      
+      // Auto scroll function
+      function autoScroll() {
+        if (!isUserScrolling && popularContainer) {
+          const cardWidth = 162; // 150px card + 12px gap
+          const maxScroll = popularContainer.scrollWidth - popularContainer.clientWidth;
+          
+          // Smooth scroll to next card
+          if (popularContainer.scrollLeft >= maxScroll - 10) {
+            // Reset to beginning with smooth animation
+            popularContainer.scrollTo({ left: 0, behavior: 'smooth' });
+          } else {
+            popularContainer.scrollBy({ left: cardWidth, behavior: 'smooth' });
+          }
+        }
+      }
+      
+      // Start auto-scrolling every 3 seconds
+      scrollInterval = setInterval(autoScroll, 3000);
+      
+      // Pause auto-scroll when user manually scrolls
+      popularContainer.addEventListener('scroll', function() {
+        isUserScrolling = true;
+        clearInterval(scrollInterval);
+        
+        // Resume auto-scroll after 5 seconds of no user interaction
+        clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(function() {
+          isUserScrolling = false;
+          scrollInterval = setInterval(autoScroll, 3000);
+        }, 5000);
+      });
+      
+      // Pause on touch/mouse interaction
+      popularContainer.addEventListener('touchstart', function() {
+        isUserScrolling = true;
+        clearInterval(scrollInterval);
+      });
+      
+      popularContainer.addEventListener('mouseenter', function() {
+        isUserScrolling = true;
+        clearInterval(scrollInterval);
+      });
+      
+      popularContainer.addEventListener('mouseleave', function() {
+        isUserScrolling = false;
+        scrollInterval = setInterval(autoScroll, 3000);
+      });
+    }
   });
 </script>
 
