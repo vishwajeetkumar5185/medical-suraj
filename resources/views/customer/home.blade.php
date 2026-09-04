@@ -244,20 +244,41 @@
 
       <!-- Nearby Open Pharmacies Section -->
       <div style="margin-bottom:80px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
           <div style="display:flex; align-items:center; gap:8px;">
             <div style="width:10px; height:10px; background:#22C55E; border-radius:50%; box-shadow:0 0 0 3px rgba(34,197,94,0.3);"></div>
-            <h3 style="font-size:17px; font-weight:800; color:#1A1A1A; margin:0;">Nearby Pharmacies</h3>
+            <h3 style="font-size:17px; font-weight:800; color:#1A1A1A; margin:0;">Pharmacy Stores</h3>
           </div>
           <a href="{{ url('/nearby-pharmacies') }}" style="color:#3B82F6; font-size:13px; font-weight:700; text-decoration:none;">View All ›</a>
         </div>
+
+        <!-- Filter Pill Tabs: Nearby (≤5km), My City, All -->
+        <div style="display:flex; gap:8px; margin-bottom:16px; overflow-x:auto; padding-bottom:4px; -webkit-overflow-scrolling:touch;">
+          <button type="button" onclick="filterPharmacies('nearby')" id="tab-nearby" class="pharmacy-filter-btn active-tab" style="padding:8px 16px; border-radius:24px; border:1px solid #3B82F6; background:#3B82F6; color:#fff; font-size:12px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:6px; white-space:nowrap; transition:all 0.2s ease;">
+            📍 Nearby (< 5 km)
+          </button>
+          <button type="button" onclick="filterPharmacies('city')" id="tab-city" class="pharmacy-filter-btn" style="padding:8px 16px; border-radius:24px; border:1px solid #E2E8F0; background:#F8FAFC; color:#64748B; font-size:12px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:6px; white-space:nowrap; transition:all 0.2s ease;">
+            🏙️ My City ({{ $cityToken ?? 'Muzaffarpur' }})
+          </button>
+          <button type="button" onclick="filterPharmacies('all')" id="tab-all" class="pharmacy-filter-btn" style="padding:8px 16px; border-radius:24px; border:1px solid #E2E8F0; background:#F8FAFC; color:#64748B; font-size:12px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:6px; white-space:nowrap; transition:all 0.2s ease;">
+            🌐 All Stores
+          </button>
+        </div>
         
-        <!-- Pharmacy Cards -->
-        <div style="display:flex; flex-direction:column; gap:12px;">
-          @foreach($shops->take(5) as $shop)
-          <a href="{{ url('/search?shop_id='.$shop->id) }}" style="text-decoration:none;">
+        <!-- Pharmacy Cards List -->
+        <div style="display:flex; flex-direction:column; gap:12px;" id="pharmacy-list-container">
+          @foreach($shops as $shop)
+          @php
+            $shopDist = isset($shop->distance) ? (float)$shop->distance : (float)($shop->distance_km ?? 9999);
+            $fullAddrStr = strtolower(($shop->area ?? '').' '.($shop->address ?? '').' '.($shop->name ?? ''));
+          @endphp
+          <a href="{{ url('/search?shop_id='.$shop->id) }}" 
+             class="shop-card-item" 
+             data-distance="{{ $shopDist }}" 
+             data-address="{{ $fullAddrStr }}"
+             style="text-decoration:none;">
             <div style="background:#fff; border-radius:16px; padding:14px; box-shadow:0 2px 8px rgba(0,0,0,0.06); display:flex; gap:12px; align-items:center;">
-              <div style="width:56px; height:56px; background:#EEF2FF; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:28px; flex-shrink:0;">
+              <div style="width:56px; height:56px; background:#EEF2FF; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:28px; flex-shrink:0; overflow:hidden;">
                 @if($shop->image)
                   <img src="{{ asset($shop->image) }}" style="width:100%; height:100%; object-fit:cover; border-radius:12px;">
                 @else
@@ -268,8 +289,8 @@
                 <div style="font-size:14px; font-weight:800; color:#1A1A1A; margin-bottom:3px;">{{ $shop->name }}</div>
                 <div style="font-size:12px; color:#64748B; margin-bottom:4px;">
                   📍 {{ $shop->area }}
-                  @if(isset($shop->distance) && $shop->distance < 9999)
-                    <span style="color:#3B82F6; font-weight:700;"> • {{ number_format($shop->distance, 1) }} km</span>
+                  @if($shopDist < 9999)
+                    <span style="color:#3B82F6; font-weight:700;"> • {{ number_format($shopDist, 1) }} km</span>
                   @endif
                 </div>
                 <div style="display:flex; align-items:center; gap:8px;">
@@ -291,6 +312,13 @@
             </div>
           </a>
           @endforeach
+
+          <!-- Empty State Message when no shops match active filter -->
+          <div id="no-shops-message" style="display:none; text-align:center; padding:28px 16px; background:#fff; border-radius:16px; box-shadow:0 2px 8px rgba(0,0,0,0.04);">
+            <div style="font-size:36px; margin-bottom:8px;">🏥</div>
+            <div style="font-size:14px; font-weight:700; color:#1A1A1A;" id="no-shops-title">No pharmacies found within 5 km</div>
+            <div style="font-size:12px; color:#64748B; margin-top:4px;">Try switching to <b>My City</b> or <b>All Stores</b> tab above.</div>
+          </div>
         </div>
       </div>
 
@@ -374,42 +402,72 @@
     }
   }
 
-  // Get user's location on page load
-  window.addEventListener('DOMContentLoaded', function() {
-    if (navigator.geolocation) {
-      // Try with high accuracy first
-      navigator.geolocation.getCurrentPosition(
-        function(position) {
-          const lat = position.coords.latitude;
-          const lng = position.coords.longitude;
-          
-          console.log('Location detected:', lat, lng);
-          
-          // Save location first (works even without reverse geocoding)
-          fetch("{{ url('/set-location') }}?city=Your Location&lat=" + lat + "&lng=" + lng)
-            .then(() => {
-              // Reload page to show updated distances
-              window.location.reload();
-            })
-            .catch(err => console.log('Location save failed:', err));
-        }, 
-        function(error) {
-          console.log('GPS blocked or failed, using default location');
-          // Use default location if GPS fails
-          const locationElements = document.querySelectorAll('[data-location-display]');
-          locationElements.forEach(el => {
-            if (el.textContent === 'Detecting...') {
-              el.textContent = '{{ session("user_location", "Muzaffarpur") }}';
-            }
-          });
-        },
-        {
-          enableHighAccuracy: false,
-          timeout: 5000,
-          maximumAge: 300000
-        }
-      );
+  function filterPharmacies(type) {
+    const tabs = document.querySelectorAll('.pharmacy-filter-btn');
+    tabs.forEach(tab => {
+      tab.style.background = '#F8FAFC';
+      tab.style.color = '#64748B';
+      tab.style.borderColor = '#E2E8F0';
+    });
+
+    const activeTab = document.getElementById('tab-' + type);
+    if (activeTab) {
+      activeTab.style.background = '#3B82F6';
+      activeTab.style.color = '#FFFFFF';
+      activeTab.style.borderColor = '#3B82F6';
     }
+
+    const cards = document.querySelectorAll('.shop-card-item');
+    const currentCity = "{{ strtolower($cityToken ?? 'muzaffarpur') }}";
+    let visibleCount = 0;
+
+    cards.forEach(card => {
+      const distance = parseFloat(card.dataset.distance || 9999);
+      const address = (card.dataset.address || '').toLowerCase();
+
+      let show = false;
+      if (type === 'nearby') {
+        // ONLY shops within 5 km
+        show = (distance <= 5.0);
+      } else if (type === 'city') {
+        // Shops matching user's city or area
+        show = address.includes(currentCity) || currentCity.includes(address) || (distance <= 15.0);
+      } else if (type === 'all') {
+        // All shops
+        show = true;
+      }
+
+      if (show) {
+        card.style.display = 'block';
+        visibleCount++;
+      } else {
+        card.style.display = 'none';
+      }
+    });
+
+    const noShopsMsg = document.getElementById('no-shops-message');
+    const noShopsTitle = document.getElementById('no-shops-title');
+    if (noShopsMsg) {
+      if (visibleCount === 0) {
+        noShopsMsg.style.display = 'block';
+        if (noShopsTitle) {
+          if (type === 'nearby') {
+            noShopsTitle.textContent = 'No pharmacies found within 5 km';
+          } else if (type === 'city') {
+            noShopsTitle.textContent = 'No pharmacies found in {{ $cityToken ?? "your city" }}';
+          } else {
+            noShopsTitle.textContent = 'No pharmacies found';
+          }
+        }
+      } else {
+        noShopsMsg.style.display = 'none';
+      }
+    }
+  }
+
+  // Initial filter: Nearby <= 5km by default
+  document.addEventListener('DOMContentLoaded', function() {
+    filterPharmacies('nearby');
   });
 </script>
 

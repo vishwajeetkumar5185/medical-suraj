@@ -30,3 +30,17 @@ composer.phar
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+# Local Tool Binaries & SQLite DB
+/php_bin/
+/git_bin/
+/7zextra/
+/7zr.exe
+/vclayout/
+/vcextracted/
+/vc_all/
+/vc_cab_extracted/
+/vc_dlls/
+/vc_redist.x64.exe
+/database/database.sqlite
+

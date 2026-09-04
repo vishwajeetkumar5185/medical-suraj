@@ -62,16 +62,14 @@ class HomeController extends Controller
                     $shop->longitude
                 );
                 
-                \Log::info('Shop distance calculated', [
-                    'shop' => $shop->name,
-                    'distance' => $shop->distance
-                ]);
-                
                 return $shop;
             })->sortBy('distance')->values();
         } else {
-            \Log::warning('User location not available, showing shops without distance sorting');
-            $shops = $approvedShops->values();
+            \Log::warning('User location not available, using shop distance_km');
+            $shops = $approvedShops->map(function($shop) {
+                $shop->distance = $shop->distance_km ?? 1.5;
+                return $shop;
+            })->sortBy('distance')->values();
         }
         
         $shopsCount = $approvedShops->count();
@@ -80,7 +78,7 @@ class HomeController extends Controller
         $cart = session('cart', []);
         $cartCount = array_sum($cart);
 
-        return view('customer.home', compact('pills', 'categories', 'shops', 'shopsCount', 'onlineShopsCount', 'cart', 'cartCount', 'popularMedicines'));
+        return view('customer.home', compact('pills', 'categories', 'shops', 'shopsCount', 'onlineShopsCount', 'cart', 'cartCount', 'popularMedicines', 'cityToken'));
     }
     
     /**
