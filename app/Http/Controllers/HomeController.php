@@ -291,12 +291,12 @@ class HomeController extends Controller
         if (strlen($q) < 1) {
             return response()->json([]);
         }
-        $words = array_filter(explode(' ', $q));
-        $medsQuery = \App\Models\Medicine::query();
-        foreach ($words as $word) {
-            $medsQuery->where('name', 'like', '%' . $word . '%');
-        }
-        $meds = $medsQuery->limit(15)->get();
+        
+        // Always search for medicines STARTING with the query (not anywhere in middle)
+        $meds = \App\Models\Medicine::where('name', 'like', $q . '%')
+            ->orderBy('name', 'asc')
+            ->get();
+        
         return response()->json($meds);
     }
     

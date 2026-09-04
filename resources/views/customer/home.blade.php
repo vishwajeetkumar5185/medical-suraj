@@ -86,7 +86,7 @@
           oninput="debouncedHomeSearchSuggestions(this.value)"
         >
       </div>
-      <div id="home-search-autocomplete" style="display:none; position:absolute; left:16px; right:16px; background:#fff; border-radius:12px; margin-top:8px; box-shadow:0 8px 24px rgba(0,0,0,0.12); max-height:300px; overflow-y:auto; z-index:9999;"></div>
+      <div id="home-search-autocomplete" style="display:none; position:absolute; left:16px; right:16px; background:#fff; border-radius:12px; margin-top:8px; box-shadow:0 8px 24px rgba(0,0,0,0.12); max-height:400px; overflow-y:auto; z-index:9999;"></div>
     </form>
 
     <!-- Category Pills -->
@@ -398,29 +398,61 @@
       return;
     }
 
+    // Show loading state
+    dropdown.style.display = 'block';
+    dropdown.innerHTML = '<div style="padding:16px; text-align:center; color:#64748B; font-size:13px;">🔍 Searching...</div>';
+
     searchTimeout = setTimeout(() => {
       fetch(`{{ url('/medicines/search') }}?q=${encodeURIComponent(q)}`)
         .then(res => res.json())
         .then(data => {
           dropdown.innerHTML = '';
           if (data.length === 0) {
-            dropdown.style.display = 'none';
+            dropdown.innerHTML = '<div style="padding:20px; text-align:center;"><div style="font-size:40px; margin-bottom:8px;">😔</div><div style="color:#64748B; font-size:14px; font-weight:600;">No medicines found</div><div style="color:#94A3B8; font-size:12px; margin-top:4px;">Try a different name</div></div>';
             return;
           }
-          dropdown.style.display = 'block';
-          data.forEach(item => {
+          
+          // Add header
+          const header = document.createElement('div');
+          header.style.cssText = 'padding:12px 16px; background:#F8FAFC; border-bottom:2px solid #E2E8F0; font-size:12px; font-weight:800; color:#64748B; text-transform:uppercase;';
+          header.textContent = `${data.length} Medicine${data.length > 1 ? 's' : ''} Found`;
+          dropdown.appendChild(header);
+          
+          data.forEach((item, index) => {
             const row = document.createElement('div');
-            row.style.cssText = 'padding:14px 16px; cursor:pointer; border-bottom:1px solid #F3F4F6; display:flex; align-items:center; gap:10px;';
-            row.innerHTML = `<span style="font-size:20px;">${item.emoji || '💊'}</span> <div><div style="font-size:14px; font-weight:700; color:#1A1A1A;">${item.name}</div><div style="font-size:11px; color:#64748B;">${item.category}</div></div>`;
+            row.style.cssText = 'padding:14px 16px; cursor:pointer; border-bottom:1px solid #F3F4F6; display:flex; align-items:center; gap:12px; transition:background 0.2s ease;';
+            row.innerHTML = `
+              <div style="width:40px; height:40px; background:#F8FAFC; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0;">
+                ${item.emoji || '💊'}
+              </div>
+              <div style="flex:1;">
+                <div style="font-size:14px; font-weight:700; color:#1A1A1A; margin-bottom:2px;">${item.name}</div>
+                <div style="font-size:11px; color:#64748B;">${item.category || 'Medicine'}</div>
+              </div>
+              <div style="font-size:13px; font-weight:800; color:#3B82F6;">→</div>
+            `;
+            
+            row.addEventListener('mouseenter', () => {
+              row.style.background = '#F8FAFC';
+            });
+            
+            row.addEventListener('mouseleave', () => {
+              row.style.background = '#fff';
+            });
+            
             row.addEventListener('click', () => {
               document.getElementById('home-search-input').value = item.name;
               dropdown.style.display = 'none';
               triggerHomeSearch();
             });
+            
             dropdown.appendChild(row);
           });
         })
-        .catch(err => console.error(err));
+        .catch(err => {
+          console.error(err);
+          dropdown.innerHTML = '<div style="padding:20px; text-align:center;"><div style="font-size:40px; margin-bottom:8px;">⚠️</div><div style="color:#EF4444; font-size:14px; font-weight:600;">Error loading medicines</div></div>';
+        });
     }, 300);
   }
 
@@ -430,6 +462,23 @@
       window.location.href = "{{ url('/search') }}?q=" + encodeURIComponent(q);
     }
   }
+
+  // Close dropdown when clicking outside
+  document.addEventListener('click', function(e) {
+    const dropdown = document.getElementById('home-search-autocomplete');
+    const searchInput = document.getElementById('home-search-input');
+    if (dropdown && searchInput && !dropdown.contains(e.target) && e.target !== searchInput) {
+      dropdown.style.display = 'none';
+    }
+  });
+
+  // Focus on search shows dropdown if there's content
+  document.getElementById('home-search-input')?.addEventListener('focus', function() {
+    const dropdown = document.getElementById('home-search-autocomplete');
+    if (this.value.trim().length > 0 && dropdown.innerHTML !== '') {
+      dropdown.style.display = 'block';
+    }
+  });
 
   function filterPharmacies(type) {
     const tabs = document.querySelectorAll('.pharmacy-filter-btn');
