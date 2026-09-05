@@ -10,7 +10,7 @@
   body { background: #F5F7FA !important; }
 </style>
 
-<div style="min-height:100vh; background:#F5F7FA; padding-bottom:100px;">
+<div style="min-height:100vh; background:#F5F7FA; padding-bottom:160px;">
   
   <!-- Header -->
   <div style="background:linear-gradient(180deg, #0EA5E9 0%, #0284C7 100%); padding:16px; position:sticky; top:0; z-index:100;">
@@ -117,18 +117,20 @@
 
   </div>
 
-  <!-- Checkout Button -->
+  <!-- Checkout Button - Above Bottom Navigation -->
   @if($cartCount > 0)
-  <div style="position:fixed; bottom:0; left:0; right:0; background:#fff; border-top:1px solid #e5e7eb; padding:16px; box-shadow:0 -4px 12px rgba(0,0,0,0.08); z-index:99;">
-    @auth
-      <a href="{{ url('/smartcart/results') }}" style="display:block; width:100%; padding:14px; background:linear-gradient(135deg, #0EA5E9, #0284C7); color:#fff; text-align:center; border-radius:10px; font-weight:800; font-size:15px; text-decoration:none; box-shadow:0 4px 12px rgba(14,165,233,0.3);">
-        🚀 Proceed to Checkout ({{ $cartCount }} items)
-      </a>
-    @else
-      <a href="{{ url('/login') }}" style="display:block; width:100%; padding:14px; background:linear-gradient(135deg, #10B981, #059669); color:#fff; text-align:center; border-radius:10px; font-weight:800; font-size:15px; text-decoration:none; box-shadow:0 4px 12px rgba(16,185,129,0.3);">
-        🔐 Login to Checkout ({{ $cartCount }} items)
-      </a>
-    @endauth
+  <div style="position:fixed; bottom:80px; left:50%; transform:translateX(-50%); width:100%; max-width:600px; padding:0 16px; z-index:999;">
+    <div style="background:#fff; border-radius:12px; padding:16px; box-shadow:0 -4px 20px rgba(0,0,0,0.15); border:1px solid #e5e7eb;">
+      @auth
+        <a href="{{ url('/smartcart/results') }}" style="display:block; width:100%; padding:16px; background:linear-gradient(135deg, #0EA5E9, #0284C7); color:#fff; text-align:center; border-radius:10px; font-weight:800; font-size:16px; text-decoration:none; box-shadow:0 4px 12px rgba(14,165,233,0.4);">
+          🚀 Proceed to Checkout ({{ $cartCount }} items)
+        </a>
+      @else
+        <a href="{{ url('/login') }}" style="display:block; width:100%; padding:16px; background:linear-gradient(135deg, #10B981, #059669); color:#fff; text-align:center; border-radius:10px; font-weight:800; font-size:16px; text-decoration:none; box-shadow:0 4px 12px rgba(16,185,129,0.4);">
+          🔐 Login to Checkout ({{ $cartCount }} items)
+        </a>
+      @endauth
+    </div>
   </div>
   @endif
 

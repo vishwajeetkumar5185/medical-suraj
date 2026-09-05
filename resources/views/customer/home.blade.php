@@ -1,8 +1,8 @@
 @extends('layouts.app')
 
-@section('seo_title', 'Dawalo 💊 - Online Medicine Aggregator & Home Delivery in Bihar')
-@section('seo_description', 'Search medicines, verify stock at nearby local pharmacies, and get home deliveries in 45 minutes with Bihar\'s most reliable local medicine aggregator.')
-@section('seo_keywords', 'dawalo, online medicine store, online pharmacy Bihar, check medicine stock, medicine delivery Patna, medicine delivery Muzaffarpur, buy generic medicine')
+@section('seo_title', 'Dawalo 💊 - Online Medicine Aggregator & Home Delivery in Bihar | Powered by TechoMission')
+@section('seo_description', 'Search medicines, verify stock at nearby local pharmacies, and get home deliveries in 45 minutes with Bihar\'s most reliable local medicine aggregator. Powered by TechoMission - Bihar Best IT Company.')
+@section('seo_keywords', 'dawalo, online medicine store, online pharmacy Bihar, check medicine stock, medicine delivery Patna, medicine delivery Muzaffarpur, buy generic medicine, TechoMission, Bihar best IT company, techomission.com')
 
 @section('content')
 <style>
