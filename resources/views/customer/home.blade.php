@@ -86,7 +86,7 @@
           oninput="debouncedHomeSearchSuggestions(this.value)"
         >
       </div>
-      <div id="home-search-autocomplete" style="display:none; position:absolute; left:16px; right:16px; background:#fff; border-radius:12px; margin-top:8px; box-shadow:0 8px 24px rgba(0,0,0,0.12); max-height:400px; overflow-y:auto; z-index:9999;"></div>
+      <div id="home-search-autocomplete" style="display:none; position:absolute; left:16px; right:16px; background:#fff; border-radius:12px; margin-top:8px; box-shadow:0 8px 24px rgba(0,0,0,0.12); max-height:500px; overflow-y:auto; z-index:9999;"></div>
     </form>
 
     <!-- Category Pills -->
@@ -179,39 +179,51 @@
         </div>
         <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:12px;">
           <a href="{{ url('/search?q=Cold') }}" style="text-decoration:none;">
-            <div style="background:#FEF3C7; border-radius:16px; padding:20px 12px; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:110px;">
-              <div style="font-size:40px; margin-bottom:8px;">🤧</div>
-              <div style="font-size:12px; font-weight:700; color:#1A1A1A; text-align:center;">Cold & Cough</div>
+            <div style="display:flex; flex-direction:column; gap:8px;">
+              <div style="width:100%; aspect-ratio:1/1; overflow:hidden; border-radius:12px;">
+                <img src="https://medicinedata.in/drg/DRS003256_1.jpg" style="width:100%; height:100%; object-fit:cover;" alt="Cold & Cough">
+              </div>
+              <div style="font-size:11px; font-weight:700; color:#1A1A1A; text-align:center; line-height:1.2;">Cold & Cough</div>
             </div>
           </a>
           <a href="{{ url('/search?q=Fever') }}" style="text-decoration:none;">
-            <div style="background:#DBEAFE; border-radius:16px; padding:20px 12px; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:110px;">
-              <div style="font-size:40px; margin-bottom:8px;">🌡️</div>
-              <div style="font-size:12px; font-weight:700; color:#1A1A1A; text-align:center;">Fever & Pain</div>
+            <div style="display:flex; flex-direction:column; gap:8px;">
+              <div style="width:100%; aspect-ratio:1/1; overflow:hidden; border-radius:12px;">
+                <img src="https://medicinedata.in/drg/DRS352322_1.jpg" style="width:100%; height:100%; object-fit:cover;" alt="Fever & Pain">
+              </div>
+              <div style="font-size:11px; font-weight:700; color:#1A1A1A; text-align:center; line-height:1.2;">Fever & Pain</div>
             </div>
           </a>
           <a href="{{ url('/search?q=Pain') }}" style="text-decoration:none;">
-            <div style="background:#FECACA; border-radius:16px; padding:20px 12px; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:110px;">
-              <div style="font-size:40px; margin-bottom:8px;">💊</div>
-              <div style="font-size:12px; font-weight:700; color:#1A1A1A; text-align:center;">Pain Relief</div>
+            <div style="display:flex; flex-direction:column; gap:8px;">
+              <div style="width:100%; aspect-ratio:1/1; overflow:hidden; border-radius:12px;">
+                <img src="https://medicinedata.in/drg/DRS008085_1.jpg" style="width:100%; height:100%; object-fit:cover;" alt="Pain Relief">
+              </div>
+              <div style="font-size:11px; font-weight:700; color:#1A1A1A; text-align:center; line-height:1.2;">Pain Relief</div>
             </div>
           </a>
           <a href="{{ url('/search?q=Heart') }}" style="text-decoration:none;">
-            <div style="background:#FED7D7; border-radius:16px; padding:20px 12px; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:110px;">
-              <div style="font-size:40px; margin-bottom:8px;">❤️</div>
-              <div style="font-size:12px; font-weight:700; color:#1A1A1A; text-align:center;">Heart Care</div>
+            <div style="display:flex; flex-direction:column; gap:8px;">
+              <div style="width:100%; aspect-ratio:1/1; overflow:hidden; border-radius:12px;">
+                <img src="https://medicinedata.in/drg/DRS030209_1.jpg" style="width:100%; height:100%; object-fit:cover;" alt="Heart Care">
+              </div>
+              <div style="font-size:11px; font-weight:700; color:#1A1A1A; text-align:center; line-height:1.2;">Heart Care</div>
             </div>
           </a>
           <a href="{{ url('/search?q=Diabetes') }}" style="text-decoration:none;">
-            <div style="background:#FED7E2; border-radius:16px; padding:20px 12px; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:110px;">
-              <div style="font-size:40px; margin-bottom:8px;">🩸</div>
-              <div style="font-size:12px; font-weight:700; color:#1A1A1A; text-align:center;">Diabetic</div>
+            <div style="display:flex; flex-direction:column; gap:8px;">
+              <div style="width:100%; aspect-ratio:1/1; overflow:hidden; border-radius:12px;">
+                <img src="https://medicinedata.in/drg/DRS073799_1.jpg" style="width:100%; height:100%; object-fit:cover;" alt="Diabetic">
+              </div>
+              <div style="font-size:11px; font-weight:700; color:#1A1A1A; text-align:center; line-height:1.2;">Diabetic</div>
             </div>
           </a>
           <a href="{{ url('/search?q=Blood Pressure') }}" style="text-decoration:none;">
-            <div style="background:#E0E7FF; border-radius:16px; padding:20px 12px; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:110px;">
-              <div style="font-size:40px; margin-bottom:8px;">🩺</div>
-              <div style="font-size:12px; font-weight:700; color:#1A1A1A; text-align:center;">Blood Pressure</div>
+            <div style="display:flex; flex-direction:column; gap:8px;">
+              <div style="width:100%; aspect-ratio:1/1; overflow:hidden; border-radius:12px;">
+                <img src="https://medicinedata.in/drg/DRS094782_1.jpg" style="width:100%; height:100%; object-fit:cover;" alt="Blood Pressure">
+              </div>
+              <div style="font-size:11px; font-weight:700; color:#1A1A1A; text-align:center; line-height:1.2;">Blood Pressure</div>
             </div>
           </a>
         </div>
@@ -365,11 +377,14 @@
       </div>
       <span style="font-size:11px; font-weight:700; color:#3B82F6;">Home</span>
     </a>
-    <a href="{{ url('/profile/orders') }}" style="display:flex; flex-direction:column; align-items:center; text-decoration:none;">
+    <a href="{{ url('/smartcart') }}" style="display:flex; flex-direction:column; align-items:center; text-decoration:none; position:relative;">
       <div style="width:48px; height:48px; display:flex; align-items:center; justify-content:center; margin-bottom:4px;">
-        <span style="font-size:22px;">📋</span>
+        <span style="font-size:22px;">🛒</span>
       </div>
-      <span style="font-size:11px; font-weight:700; color:#64748B;">Order</span>
+      @if($cartCount > 0)
+        <span style="position:absolute; top:-4px; right:4px; background:#EF4444; color:#fff; font-size:10px; font-weight:800; padding:2px 6px; border-radius:10px; min-width:18px; text-align:center; box-shadow:0 2px 4px rgba(0,0,0,0.2);">{{ $cartCount }}</span>
+      @endif
+      <span style="font-size:11px; font-weight:700; color:#64748B;">Cart</span>
     </a>
     <a href="{{ url('/profile') }}" style="display:flex; flex-direction:column; align-items:center; text-decoration:none;">
       <div style="width:48px; height:48px; display:flex; align-items:center; justify-content:center; margin-bottom:4px;">
@@ -414,63 +429,95 @@
             return;
           }
           
-          // Add header
+          // Add header with count
           const header = document.createElement('div');
-          header.style.cssText = 'padding:12px 16px; background:#F8FAFC; border-bottom:2px solid #E2E8F0; font-size:12px; font-weight:800; color:#64748B; text-transform:uppercase;';
-          header.textContent = `${data.length} Medicine${data.length > 1 ? 's' : ''} Found`;
+          header.style.cssText = 'padding:12px 16px; background:#f8fafc; border-bottom:1px solid #e5e7eb; font-size:14px; font-weight:700; color:#1f2937;';
+          header.textContent = 'Medicines';
           dropdown.appendChild(header);
           
+          // Add medicines list
           data.forEach((item, index) => {
             const row = document.createElement('div');
-            row.style.cssText = 'padding:14px 16px; cursor:pointer; border-bottom:1px solid #F3F4F6; display:flex; align-items:center; gap:12px; transition:background 0.2s ease;';
+            row.style.cssText = 'padding:12px 16px; border-bottom:1px solid #f3f4f6; display:flex; align-items:center; gap:12px; background:#fff;';
             
+            // Get image
             let imgSrc = null;
-            if (item.images && Array.isArray(item.images) && item.images.length > 0) {
-              imgSrc = item.images[0];
-            } else if (item.image) {
-              imgSrc = item.image;
+            if (item.images) {
+              const imgs = Array.isArray(item.images) ? item.images : JSON.parse(item.images || '[]');
+              imgSrc = imgs[0] || null;
             }
             
-            let imgHtml = `${item.emoji || '💊'}`;
+            let imgHtml = `<span style="font-size:24px;">${item.emoji || '💊'}</span>`;
             if (imgSrc) {
-              const fullSrc = (imgSrc.startsWith('http://') || imgSrc.startsWith('https://')) ? imgSrc : `/${imgSrc.replace(/^\/+/, '')}`;
-              const fallbackEmoji = item.emoji || '💊';
-              imgHtml = `<img src="${fullSrc}" referrerpolicy="no-referrer" style="width:100%; height:100%; object-fit:contain; border-radius:8px;" onerror="this.outerHTML='<span style=\\'font-size:20px;\\'>${fallbackEmoji}</span>'">`;
+              const fullSrc = (imgSrc.startsWith('http://') || imgSrc.startsWith('https://')) ? imgSrc : `${imgSrc}`;
+              imgHtml = `<img src="${fullSrc}" style="width:100%; height:100%; object-fit:contain;" onerror="this.outerHTML='<span style=\\'font-size:24px;\\'>${item.emoji || '💊'}</span>'">`;
             }
 
             row.innerHTML = `
-              <div style="width:40px; height:40px; background:#F8FAFC; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0; overflow:hidden;">
+              <div style="width:48px; height:48px; background:#f8fafc; border-radius:8px; display:flex; align-items:center; justify-content:center; flex-shrink:0; overflow:hidden;">
                 ${imgHtml}
               </div>
-              <div style="flex:1;">
-                <div style="font-size:14px; font-weight:700; color:#1A1A1A; margin-bottom:2px;">${item.name}</div>
-                <div style="font-size:11px; color:#64748B;">${item.category || 'Medicine'}</div>
+              <div style="flex:1; min-width:0;">
+                <div style="font-size:14px; font-weight:700; color:#1f2937; margin-bottom:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${item.name}</div>
+                <div style="font-size:12px; color:#0284c7; font-weight:600; margin-bottom:2px;">${item.composition || 'Strip of tablets'}</div>
+                <div style="font-size:11px; color:#6b7280;">${item.marketer || 'Manufacturer'}</div>
               </div>
-              <div style="font-size:13px; font-weight:800; color:#3B82F6;">→</div>
+              <div style="flex-shrink:0;">
+                <div style="font-size:16px; font-weight:700; color:#1f2937; margin-bottom:4px;">₹${item.price || '0.00'}</div>
+                <button onclick="addToCart(${item.id}); event.stopPropagation();" style="background:#0ea5e9; color:#fff; border:none; border-radius:6px; padding:6px 16px; font-size:12px; font-weight:700; cursor:pointer;">ADD</button>
+              </div>
             `;
             
-            row.addEventListener('mouseenter', () => {
-              row.style.background = '#F8FAFC';
-            });
-            
-            row.addEventListener('mouseleave', () => {
-              row.style.background = '#fff';
-            });
-            
             row.addEventListener('click', () => {
-              document.getElementById('home-search-input').value = item.name;
-              dropdown.style.display = 'none';
-              triggerHomeSearch();
+              window.location.href = `{{ url('/medicine') }}/${item.id}`;
             });
             
             dropdown.appendChild(row);
           });
+          
+          // Add "View all medicines" button if more than 10
+          if (data.length >= 10) {
+            const viewAllBtn = document.createElement('div');
+            viewAllBtn.style.cssText = 'padding:16px; text-align:center; background:#f0f9ff; cursor:pointer;';
+            viewAllBtn.innerHTML = '<span style="color:#0ea5e9; font-size:14px; font-weight:700;">View all medicines →</span>';
+            viewAllBtn.addEventListener('click', () => {
+              triggerHomeSearch();
+            });
+            dropdown.appendChild(viewAllBtn);
+          }
         })
         .catch(err => {
           console.error(err);
           dropdown.innerHTML = '<div style="padding:20px; text-align:center;"><div style="font-size:40px; margin-bottom:8px;">⚠️</div><div style="color:#EF4444; font-size:14px; font-weight:600;">Error loading medicines</div></div>';
         });
     }, 300);
+  }
+
+  // Add to cart function
+  function addToCart(medicineId) {
+    fetch('{{ url("/cart/add") }}', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+      },
+      body: JSON.stringify({
+        medicine_id: medicineId,
+        quantity: 1
+      })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        alert('✓ Added to cart!');
+      } else {
+        alert(data.message || 'Failed to add to cart');
+      }
+    })
+    .catch(err => {
+      console.error(err);
+      alert('Error adding to cart');
+    });
   }
 
   function triggerHomeSearch() {

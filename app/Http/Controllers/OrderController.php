@@ -300,8 +300,11 @@ class OrderController extends Controller
         }
 
         $order->shop = Shop::findOrFail($order->shop_id);
+        
+        $cart = session('cart', []);
+        $cartCount = array_sum($cart);
 
-        return view('customer.order_success', compact('order'));
+        return view('customer.order_success', compact('order', 'cartCount'));
     }
 
     public function getStatus($id)

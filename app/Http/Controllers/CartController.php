@@ -11,55 +11,37 @@ class CartController extends Controller
 {
     public function index(Request $request)
     {
-        $query = $request->input('q', '');
         $cart = session('cart', []);
         $cartCount = array_sum($cart);
 
-        $page = (int) $request->input('page', 1);
-        $perPage = 50;
-        $offset = ($page - 1) * $perPage;
-
-        $catalogQuery = Medicine::query();
-        if ($query) {
-            $catalogQuery->where(function($q) use ($query) {
-                $q->where('name', 'like', "%{$query}%")
-                  ->orWhere('category', 'like', "%{$query}%");
-            });
-        }
-        
-        // Fetch items having image_urls first directly in SQL
-        $catalog = $catalogQuery->orderByRaw('CASE WHEN image_urls IS NOT NULL AND image_urls != "" THEN 0 ELSE 1 END')
-            ->orderBy('name', 'asc')
-            ->offset($offset)
-            ->limit($perPage)
-            ->get()
-            ->map(function ($med) {
-                $disc = $med->mrp > 0 ? round((($med->mrp - $med->price) / $med->mrp) * 100) : 0;
-                return (object) [
-                    'id' => $med->id,
-                    'name' => $med->name,
-                    'category' => $med->category,
-                    'emoji' => $med->emoji,
-                    'price' => (float)$med->price,
-                    'mrp' => (float)$med->mrp,
-                    'disc' => $disc,
-                    'images' => $med->images
-                ];
-            });
-
-        if ($request->ajax()) {
-            $html = view('customer.smartcart_items_inner', compact('catalog', 'cart'))->render();
-            return response()->json([
-                'html' => $html,
-                'hasMore' => $catalog->count() === $perPage
-            ])
-            ->header('Vary', 'X-Requested-With')
-            ->header('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0')
-            ->header('Pragma', 'no-cache')
-            ->header('Expires', '0');
+        // Only fetch medicines that are in the cart
+        if (empty($cart)) {
+            $medicines = collect([]);
+        } else {
+            $medicines = Medicine::whereIn('id', array_keys($cart))
+                ->orderBy('name', 'asc')
+                ->get()
+                ->map(function ($med) {
+                    $disc = $med->mrp > 0 ? round((($med->mrp - $med->price) / $med->mrp) * 100) : 0;
+                    return (object) [
+                        'id' => $med->id,
+                        'name' => $med->name,
+                        'category' => $med->category,
+                        'composition' => $med->composition ?? 'Strip of tablets',
+                        'emoji' => $med->emoji,
+                        'price' => (float)$med->price,
+                        'mrp' => (float)$med->mrp,
+                        'disc' => $disc,
+                        'images' => $med->images
+                    ];
+                });
         }
 
-        return view('customer.smartcart', compact('catalog', 'cart', 'cartCount', 'query'));
+        return view('customer.smartcart', [
+            'medicines' => $medicines,
+            'cart' => $cart,
+            'cartCount' => $cartCount
+        ]);
     }
 
     public function add(Request $request)

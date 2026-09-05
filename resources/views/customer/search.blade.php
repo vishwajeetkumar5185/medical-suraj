@@ -1,276 +1,206 @@
 @extends('layouts.app')
 
-@section('seo_title', 'Search Medicines Online - Verify Real-time Pharmacy Stock | Dawalo')
-@section('seo_description', 'Search generic or prescription medicines and instantly matching stock levels at nearby local pharmacies for fast home delivery.')
-@section('seo_keywords', 'search medicines online, find pharmacy stock, generic formulas search, dawalo medicines, local pharmacy finder')
-
+@section('seo_title', 'Search Medicines - Dawalo')
 @section('content')
-<div class="screen">
-  <!-- === HEADER === -->
-  <div class="hdr-gradient" style="padding-bottom: 30px;">
-    <div class="hdr-circle"></div>
-    <div class="hdr-circle2"></div>
 
-    <div style="margin-bottom:12px; position:relative; z-index:1; display:flex; align-items:center; gap:12px;">
-      <a href="{{ url('/') }}" class="nav-btn" style="background:rgba(255,255,255,0.15); border-radius:12px; width:40px; height:40px; color:#fff; font-size:18px; display:flex; align-items:center; justify-content:center; padding:0;">←</a>
-      <h2 style="color:#fff; font-size:22px; font-weight:800;">Search Results</h2>
+<style>
+  .navbar-wrapper { display: none !important; }
+  .footer-wrapper { display: none !important; }
+  #app { padding: 0 !important; max-width: 100% !important; margin: 0 !important; }
+  body { background: #F5F7FA !important; }
+</style>
+
+<div style="min-height:100vh; background:#F5F7FA; padding-bottom:80px;">
+  
+  <!-- Header with Search -->
+  <div style="background:linear-gradient(180deg, #0EA5E9 0%, #0284C7 100%); padding:16px; position:sticky; top:0; z-index:100;">
+    <div style="display:flex; align-items:center; gap:12px; margin-bottom:12px;">
+      <a href="{{ url('/') }}" style="width:40px; height:40px; background:rgba(255,255,255,0.2); border-radius:50%; display:flex; align-items:center; justify-content:center; text-decoration:none;">
+        <span style="color:#fff; font-size:20px;">←</span>
+      </a>
+      <h1 style="color:#fff; font-size:20px; font-weight:800; margin:0; flex:1;">Search Results</h1>
+      <a href="{{ url('/smartcart') }}" style="position:relative; text-decoration:none;">
+        <span style="font-size:24px;">🛒</span>
+        @if($cartCount > 0)
+          <span style="position:absolute; top:-8px; right:-8px; background:#EF4444; color:#fff; font-size:11px; font-weight:700; padding:2px 6px; border-radius:10px; min-width:20px; text-align:center;">{{ $cartCount }}</span>
+        @endif
+      </a>
     </div>
 
     <!-- Search Form -->
-    <form action="{{ url('/search') }}" method="GET" class="search-box" style="position:relative; z-index:1;">
-      @if(request('shop_id'))
-        <input type="hidden" name="shop_id" value="{{ request('shop_id') }}">
-      @endif
-      <input name="q" class="search-input" placeholder="Medicine ka naam likhein..." type="text" value="{{ $query }}" id="search-q">
-      <button type="submit" class="search-btn">🔍 Search</button>
-    </form>
-
-    <!-- Multiple Category Filters -->
-    <div style="margin-top: 14px; position: relative; z-index: 1;">
-      <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: rgba(255,255,255,0.7); font-weight: 800; margin-bottom: 6px;">Filter Categories:</div>
-      <div style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px;" class="hide-scrollbar">
-        @foreach($allCategories as $cat)
-          @php
-            $isChecked = in_array($cat, $selectedCategories);
-          @endphp
-          <button type="button" onclick="toggleCategoryFilter('{{ $cat }}')" style="flex-shrink: 0; border: none; border-radius: 20px; padding: 6px 14px; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s;
-            {{ $isChecked ? 'background:#fff; color:#1A3C8F; box-shadow: 0 4px 10px rgba(0,0,0,0.15); font-weight:800;' : 'background:rgba(255,255,255,0.15); color:#fff;' }}">
-            {{ $cat }}
-          </button>
-        @endforeach
+    <form action="{{ url('/search') }}" method="GET" style="margin-bottom:0;">
+      <div style="background:#fff; border-radius:12px; padding:12px 16px; display:flex; align-items:center; gap:10px; box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+        <span style="font-size:20px; color:#94A3B8;">🔍</span>
+        <input 
+          type="text" 
+          name="q"
+          placeholder="Medicine ya lab test search karein..." 
+          value="{{ $query }}"
+          style="flex:1; border:none; outline:none; font-size:14px; color:#1A1A1A; font-weight:500; background:transparent;"
+          autocomplete="off"
+        >
+        <button type="submit" style="background:none; border:none; padding:0; cursor:pointer; font-size:14px; color:#0EA5E9; font-weight:700;">Search</button>
       </div>
-    </div>
+    </form>
   </div>
 
-  <!-- === RESULTS === -->
-  <div class="scroll" id="search-scroll-container" style="flex:1; padding-bottom:8px;">
-    <div style="background:#fff; border-radius: 18px; padding: 16px 0; box-shadow: 0 2px 12px rgba(0,0,0,0.05);">
-      <!-- Removed results count header -->
+  <!-- Medicine Results -->
+  <div style="padding:16px;">
+    
+    @if($medicines->count() > 0)
+      <div style="margin-bottom:16px;">
+        <h3 style="font-size:16px; font-weight:700; color:#1f2937; margin:0;">Medicines</h3>
+      </div>
 
-      <div class="responsive-grid" id="search-items-grid" style="background: #fff; padding: 16px 14px 0;">
-        @foreach($medicines as $idx => $med)
-          @php
-            $qty = $cart[$med->id] ?? 0;
-            $disc = $med->mrp > 0 ? round((($med->mrp - $med->price) / $med->mrp) * 100) : 0;
-            $detailUrl = url('/medicine/'.$med->id.(!empty(request('shop_id')) ? '?shop_id='.request('shop_id') : ''));
-          @endphp
-          <div class="med-row" style="background:#fff; border: 1px solid #E5E7EB; border-radius: 20px; display:flex; padding: 0 12px 0 0; overflow:hidden; min-height:114px; align-items:stretch; justify-content:space-between; margin-bottom: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.04); text-decoration:none; color:inherit; width:100%;">
-            <a href="{{ $detailUrl }}" style="overflow:hidden; position:relative; display:flex; width:114px; align-self:stretch; flex-shrink:0; align-items:center; justify-content:center; text-decoration:none; border:none; background:none;">
+      <div style="display:flex; flex-direction:column; gap:12px;">
+        @foreach($medicines as $med)
+        @php
+          $qty = $cart[$med->id] ?? 0;
+        @endphp
+        <div style="background:#fff; border-radius:12px; padding:12px; box-shadow:0 2px 6px rgba(0,0,0,0.06); display:flex; align-items:center; gap:12px;">
+          <!-- Medicine Image -->
+          <a href="{{ url('/medicine/'.$med->id) }}" style="flex-shrink:0; text-decoration:none;">
+            <div style="width:60px; height:60px; background:#f8fafc; border-radius:8px; display:flex; align-items:center; justify-content:center; overflow:hidden;">
               @if(!empty($med->images))
                 @php
-                  $isRelAbsolute = strpos($med->images[0], 'http://') === 0 || strpos($med->images[0], 'https://') === 0;
-                  $relImgUrl = $isRelAbsolute ? $med->images[0] : asset($med->images[0]);
+                  $images = is_array($med->images) ? $med->images : json_decode($med->images, true);
+                  $firstImage = is_array($images) && !empty($images) ? $images[0] : null;
+                  $firstImgUrl = $firstImage ? ((strpos($firstImage, 'http://') === 0 || strpos($firstImage, 'https://') === 0) ? $firstImage : asset($firstImage)) : null;
                 @endphp
-                <img src="{{ $relImgUrl }}" referrerpolicy="no-referrer" style="width:100%; height:100%; object-fit:cover; display:block;">
+                @if($firstImgUrl)
+                  <img src="{{ $firstImgUrl }}" style="width:100%; height:100%; object-fit:contain;" alt="{{ $med->name }}">
+                @else
+                  <span style="font-size:28px;">{{ $med->emoji ?? '💊' }}</span>
+                @endif
               @else
-                <div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:#F8FAFF; border-right:1px solid #E5E7EB;">
-                  <div style="font-size:32px;">{{ $med->emoji }}</div>
-                </div>
+                <span style="font-size:28px;">{{ $med->emoji ?? '💊' }}</span>
               @endif
-              @if($idx < 2)
-                <div class="bestseller" style="z-index: 2; top:6px; left:0; border-radius:0 6px 6px 0;">Bestseller ✦</div>
-              @endif
-            </a>
-
-            <div style="flex:1; padding: 10px 10px 10px 14px; display:flex; flex-direction:column; justify-content:center; overflow:hidden; gap:3px;">
-              <a href="{{ $detailUrl }}" style="text-decoration:none; display:block; color:inherit;">
-                <div style="font-weight:800; font-size:14.5px; color:#1A1A1A; line-height:1.3; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ $med->name }}</div>
-                <div style="font-size:11.5px; color:#888;">{{ $med->category }}</div>
-                <div style="display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin-top:2px;">
-                  <div style="font-size:16px; font-weight:900; color:#1A3C8F; white-space:nowrap;">₹{{ $med->mrp }}</div>
-                </div>
-              </a>
             </div>
+          </a>
 
-            <div class="cart-controls" data-med-id="{{ $med->id }}" style="flex-shrink:0; padding-left:4px;">
-              @if($qty == 0)
-                <form action="{{ url('/cart/add') }}" method="POST" class="cart-form" style="margin:0;">
+          <!-- Medicine Info -->
+          <div style="flex:1; min-width:0;">
+            <a href="{{ url('/medicine/'.$med->id) }}" style="text-decoration:none;">
+              <div style="font-size:14px; font-weight:700; color:#1f2937; margin-bottom:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ $med->name }}</div>
+              <div style="font-size:12px; color:#0284c7; font-weight:600; margin-bottom:2px;">Strip of tablets</div>
+              <div style="font-size:11px; color:#6b7280;">{{ $med->category }}</div>
+            </a>
+          </div>
+
+          <!-- Price & Action -->
+          <div style="flex-shrink:0; text-align:right;">
+            <div style="font-size:16px; font-weight:700; color:#1f2937; margin-bottom:6px;">₹{{ number_format($med->price, 2) }}</div>
+            
+            @if($qty == 0)
+              <form action="{{ url('/cart/add') }}" method="POST" class="cart-form" style="margin:0;">
+                @csrf
+                <input type="hidden" name="medicine_id" value="{{ $med->id }}">
+                <input type="hidden" name="quantity" value="1">
+                <button type="submit" style="background:#0ea5e9; color:#fff; border:none; border-radius:6px; padding:6px 16px; font-size:12px; font-weight:700; cursor:pointer;">ADD</button>
+              </form>
+            @else
+              <div style="display:flex; align-items:center; gap:8px; border:1.5px solid #0ea5e9; border-radius:8px; overflow:hidden;">
+                <form action="{{ url('/cart/update') }}" method="POST" class="cart-form" style="margin:0;">
                   @csrf
                   <input type="hidden" name="medicine_id" value="{{ $med->id }}">
-                  <button type="submit" class="btn-blue" style="font-size:13px; padding:8px 16px; font-weight:800; border-radius:12px; background:#1A3C8F; color:#fff; border:none; cursor:pointer;">+ Add</button>
+                  <input type="hidden" name="qty" value="{{ $qty - 1 }}">
+                  <button type="submit" style="background:#fff; color:#0ea5e9; border:none; padding:4px 8px; font-size:14px; font-weight:700; cursor:pointer;">−</button>
                 </form>
-              @else
-                <div class="qty-row" style="display:flex; align-items:center; border:1.5px solid #1A3C8F; border-radius:10px; overflow:hidden; width:80px; height:32px;">
-                  <form action="{{ url('/cart/update') }}" method="POST" class="cart-form" style="flex:1; display:flex;">
-                    @csrf
-                    <input type="hidden" name="medicine_id" value="{{ $med->id }}">
-                    <input type="hidden" name="qty" value="{{ $qty - 1 }}">
-                    <button type="submit" class="qty-btn" style="padding:0; font-size:16px; color:#1A3C8F; width:100%; border:none; background:#fff; cursor:pointer;">−</button>
-                  </form>
-                  <div class="qty-num" style="padding:0; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:900; color:#1A3C8F; background:#EEF2FF; flex:1;">{{ $qty }}</div>
-                  <form action="{{ url('/cart/update') }}" method="POST" class="cart-form" style="flex:1; display:flex;">
-                    @csrf
-                    <input type="hidden" name="medicine_id" value="{{ $med->id }}">
-                    <input type="hidden" name="qty" value="{{ $qty + 1 }}">
-                    <button type="submit" class="qty-btn" style="padding:0; font-size:16px; color:#1A3C8F; width:100%; border:none; background:#fff; cursor:pointer;">+</button>
-                  </form>
-                </div>
-              @endif
-            </div>
+                <span style="font-size:13px; font-weight:700; color:#0ea5e9; min-width:20px; text-align:center;">{{ $qty }}</span>
+                <form action="{{ url('/cart/update') }}" method="POST" class="cart-form" style="margin:0;">
+                  @csrf
+                  <input type="hidden" name="medicine_id" value="{{ $med->id }}">
+                  <input type="hidden" name="qty" value="{{ $qty + 1 }}">
+                  <button type="submit" style="background:#fff; color:#0ea5e9; border:none; padding:4px 8px; font-size:14px; font-weight:700; cursor:pointer;">+</button>
+                </form>
+              </div>
+            @endif
           </div>
+        </div>
         @endforeach
       </div>
 
-       <!-- Removed Laravel Paginator links for infinite scroll -->
-
-      @if($medicines->count() == 0)
-        <div style="text-align:center; padding:40px 20px; color:#888;">
-          <div style="font-size:40px; margin-bottom:10px;">😔</div>
-          <div style="font-weight:700; font-size:16px; margin-bottom:6px;">Medicine nahi mili</div>
-          <div style="font-size:13px;">Prescription upload karein — hum dhundh denge</div>
+      <!-- Pagination -->
+      @if($medicines->hasMorePages())
+        <div style="margin-top:20px; text-align:center;">
+          <a href="{{ $medicines->nextPageUrl() }}" style="display:inline-block; padding:12px 24px; background:#0ea5e9; color:#fff; text-decoration:none; border-radius:10px; font-weight:700;">Load More</a>
         </div>
       @endif
-    </div>
+
+    @else
+      <div style="text-align:center; padding:60px 20px;">
+        <div style="font-size:80px; margin-bottom:20px;">😔</div>
+        <h3 style="font-size:18px; font-weight:800; color:#1A1A1A; margin-bottom:8px;">No Medicines Found</h3>
+        <p style="font-size:14px; color:#64748B; margin-bottom:20px;">Try searching for something else</p>
+        <a href="{{ url('/') }}" style="display:inline-block; padding:12px 24px; background:#3B82F6; color:#fff; text-decoration:none; border-radius:10px; font-weight:700;">Go to Home</a>
+      </div>
+    @endif
+
   </div>
 
-  <!-- Cart floating bar -->
-  @if($cartCount > 0)
-    <div class="cart-bar" style="position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); width: calc(100% - 40px); max-width: 600px; z-index: 9999; margin: 0;">
-      <div style="display:flex; align-items:center; gap:10px;">
-        <div style="background:#fff; border-radius:10px; width:32px; height:32px; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:14px; color:#1A3C8F;">
-          {{ $cartCount }}
-        </div>
-        <div>
-          <div style="color:#fff; font-weight:800; font-size:13px;">Cart mein {{ $cartCount }} item{{ $cartCount > 1 ? 's' : '' }}</div>
-          <div style="color:rgba(255,255,255,0.7); font-size:11px;">Pharmacy auto-match hogi</div>
-        </div>
-      </div>
-      @php
-        $checkoutUrl = url('/smartcart/results');
-        if (request('shop_id')) {
-            $checkoutUrl .= '?shop_id=' . request('shop_id');
-        }
-      @endphp
-      <a href="{{ $checkoutUrl }}" class="btn-outline" style="background:#fff; color:#1A3C8F; border:none; padding:10px 16px; font-size:13px; text-decoration:none;">Checkout →</a>
-    </div>
-  @endif
 </div>
 
 <script>
-  function toggleCategoryFilter(category) {
-    const urlParams = new URLSearchParams(window.location.search);
-    let categories = urlParams.getAll('categories[]');
-    
-    if (categories.includes(category)) {
-      categories = categories.filter(c => c !== category);
-    } else {
-      categories.push(category);
-    }
-    
-    urlParams.delete('categories[]');
-    categories.forEach(c => urlParams.append('categories[]', c));
-    
-    window.location.search = urlParams.toString();
-  }
+  // Handle cart form submissions
+  document.querySelectorAll('.cart-form').forEach(form => {
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      const btn = this.querySelector('button');
+      const originalText = btn.textContent;
+      btn.textContent = btn.textContent === 'ADD' ? 'Adding...' : '...';
+      btn.disabled = true;
 
-  // Infinite scroll logic for loading bunches
-  let currentPage = 1;
-  let isPageLoading = false;
-  let hasMorePages = {{ $medicines->hasMorePages() ? 'true' : 'false' }};
-  
-  const scrollContainer = document.getElementById('search-scroll-container');
-  const itemsGrid = document.getElementById('search-items-grid');
-
-  function handleScroll() {
-    if (isPageLoading || !hasMorePages) return;
-    
-    const threshold = 250;
-    const windowScrollPosition = document.documentElement.offsetHeight - window.innerHeight - window.scrollY;
-    const containerScrollPosition = scrollContainer.scrollHeight - scrollContainer.scrollTop - scrollContainer.clientHeight;
-    
-    if (windowScrollPosition < threshold || containerScrollPosition < threshold) {
-      loadNextBundle();
-    }
-  }
-
-  window.addEventListener('scroll', handleScroll);
-  scrollContainer.addEventListener('scroll', handleScroll);
-
-  function loadNextBundle() {
-    isPageLoading = true;
-    currentPage++;
-    
-    const loadingIndicator = document.createElement('div');
-    loadingIndicator.id = 'infinite-scroll-loading';
-    loadingIndicator.style.width = '100%';
-    loadingIndicator.style.textAlign = 'center';
-    loadingIndicator.style.padding = '15px';
-    loadingIndicator.style.fontSize = '12px';
-    loadingIndicator.style.color = '#888';
-    loadingIndicator.innerText = '📦 Loading more medicines...';
-    itemsGrid.appendChild(loadingIndicator);
-
-    const urlParams = new URLSearchParams(window.location.search);
-    urlParams.set('page', currentPage);
-    const url = `{{ url('/search') }}?${urlParams.toString()}`;
-    
-    fetch(url, {
-      headers: { 'X-Requested-With': 'XMLHttpRequest' }
-    })
-      .then(res => res.text())
-      .then(html => {
-        const oldLoader = document.getElementById('infinite-scroll-loading');
-        if (oldLoader) oldLoader.remove();
-        
-        if (html && html.trim().length > 0) {
-          const temp = document.createElement('div');
-          temp.innerHTML = html;
-          
-          // Select only the matching cards from inner view response to append to grid
-          const cards = temp.querySelectorAll('.med-row');
-          if (cards.length > 0) {
-            cards.forEach(card => {
-              itemsGrid.appendChild(card);
-            });
-            // Rebind cart submit listeners to newly appended nodes
-            bindResultsCartForms(itemsGrid);
-          } else {
-            hasMorePages = false;
-          }
-        } else {
-          hasMorePages = false;
+      fetch(this.action, {
+        method: 'POST',
+        body: new FormData(this),
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest'
         }
-        isPageLoading = false;
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          window.location.reload();
+        } else {
+          alert(data.message || 'Failed to add item');
+          btn.textContent = originalText;
+          btn.disabled = false;
+        }
       })
       .catch(err => {
         console.error(err);
-        const oldLoader = document.getElementById('infinite-scroll-loading');
-        if (oldLoader) oldLoader.remove();
-        isPageLoading = false;
-      });
-  }
-
-  function bindResultsCartForms(parent) {
-    parent.querySelectorAll('.cart-form').forEach(form => {
-      if (form.dataset.hasListener) return;
-      form.dataset.hasListener = "true";
-      form.addEventListener('submit', function(e) {
-        e.preventDefault();
-        const url = this.getAttribute('action');
-        const formData = new FormData(this);
-
-        fetch(url, {
-          method: 'POST',
-          body: formData,
-          headers: {
-            'X-Requested-With': 'XMLHttpRequest'
-          }
-        })
-        .then(response => response.json())
-        .then(data => {
-          if (data.success) {
-            window.location.reload();
-          }
-        })
-        .catch(error => {
-          console.error('Error:', error);
-          this.submit();
-        });
+        btn.textContent = originalText;
+        btn.disabled = false;
       });
     });
-  }
-
-  // Bind initial loaded list items
-  bindResultsCartForms(itemsGrid);
+  });
 </script>
+
+  <!-- Bottom Navigation -->
+  <div style="position:fixed; bottom:0; left:50%; transform:translateX(-50%); width:100%; max-width:600px; background:#fff; border-top:1px solid #E5E7EB; padding:8px 20px 12px; display:flex; justify-content:space-around; align-items:center; z-index:1000;">
+    <a href="{{ url('/') }}" style="display:flex; flex-direction:column; align-items:center; text-decoration:none;">
+      <div style="width:48px; height:48px; display:flex; align-items:center; justify-content:center; margin-bottom:4px;">
+        <span style="font-size:22px;">🏠</span>
+      </div>
+      <span style="font-size:11px; font-weight:700; color:#64748B;">Home</span>
+    </a>
+    <a href="{{ url('/smartcart') }}" style="display:flex; flex-direction:column; align-items:center; text-decoration:none; position:relative;">
+      <div style="width:48px; height:48px; display:flex; align-items:center; justify-content:center; margin-bottom:4px;">
+        <span style="font-size:22px;">🛒</span>
+      </div>
+      @if($cartCount > 0)
+        <span style="position:absolute; top:-4px; right:4px; background:#EF4444; color:#fff; font-size:10px; font-weight:800; padding:2px 6px; border-radius:10px; min-width:18px; text-align:center; box-shadow:0 2px 4px rgba(0,0,0,0.2);">{{ $cartCount }}</span>
+      @endif
+      <span style="font-size:11px; font-weight:700; color:#64748B;">Cart</span>
+    </a>
+    <a href="{{ url('/profile') }}" style="display:flex; flex-direction:column; align-items:center; text-decoration:none;">
+      <div style="width:48px; height:48px; display:flex; align-items:center; justify-content:center; margin-bottom:4px;">
+        <span style="font-size:22px;">👤</span>
+      </div>
+      <span style="font-size:11px; font-weight:700; color:#64748B;">Profile</span>
+    </a>
+  </div>
+
+</div>
+
 @endsection
