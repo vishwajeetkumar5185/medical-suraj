@@ -236,13 +236,15 @@
             @endif
             <a href="{{ url('/medicine/'.$medicine->id) }}" style="text-decoration:none; display:block;">
               <div style="width:100%; height:100px; background:#F8FAFC; border-radius:12px; margin-bottom:12px; display:flex; align-items:center; justify-content:center; overflow:hidden; padding:8px;">
-                @if($medicine->images)
+                @if(!empty($medicine->images))
                   @php
                     $images = is_array($medicine->images) ? $medicine->images : json_decode($medicine->images, true);
                     $firstImage = is_array($images) && !empty($images) ? $images[0] : null;
+                    $firstImgUrl = $firstImage ? ((strpos($firstImage, 'http://') === 0 || strpos($firstImage, 'https://') === 0) ? $firstImage : asset($firstImage)) : null;
                   @endphp
-                  @if($firstImage)
-                    <img src="{{ asset($firstImage) }}" style="max-width:100%; max-height:100%; width:auto; height:auto; object-fit:contain;" alt="{{ $medicine->name }}">
+                  @if($firstImgUrl)
+                    <img src="{{ $firstImgUrl }}" referrerpolicy="no-referrer" style="max-width:100%; max-height:100%; width:auto; height:auto; object-fit:contain;" alt="{{ $medicine->name }}" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='inline-block';">
+                    <span style="font-size:48px; display:none;">{{ $medicine->emoji ?? '💊' }}</span>
                   @else
                     <span style="font-size:48px;">{{ $medicine->emoji ?? '💊' }}</span>
                   @endif
@@ -421,9 +423,24 @@
           data.forEach((item, index) => {
             const row = document.createElement('div');
             row.style.cssText = 'padding:14px 16px; cursor:pointer; border-bottom:1px solid #F3F4F6; display:flex; align-items:center; gap:12px; transition:background 0.2s ease;';
+            
+            let imgSrc = null;
+            if (item.images && Array.isArray(item.images) && item.images.length > 0) {
+              imgSrc = item.images[0];
+            } else if (item.image) {
+              imgSrc = item.image;
+            }
+            
+            let imgHtml = `${item.emoji || '💊'}`;
+            if (imgSrc) {
+              const fullSrc = (imgSrc.startsWith('http://') || imgSrc.startsWith('https://')) ? imgSrc : `/${imgSrc.replace(/^\/+/, '')}`;
+              const fallbackEmoji = item.emoji || '💊';
+              imgHtml = `<img src="${fullSrc}" referrerpolicy="no-referrer" style="width:100%; height:100%; object-fit:contain; border-radius:8px;" onerror="this.outerHTML='<span style=\\'font-size:20px;\\'>${fallbackEmoji}</span>'">`;
+            }
+
             row.innerHTML = `
-              <div style="width:40px; height:40px; background:#F8FAFC; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0;">
-                ${item.emoji || '💊'}
+              <div style="width:40px; height:40px; background:#F8FAFC; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0; overflow:hidden;">
+                ${imgHtml}
               </div>
               <div style="flex:1;">
                 <div style="font-size:14px; font-weight:700; color:#1A1A1A; margin-bottom:2px;">${item.name}</div>

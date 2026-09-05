@@ -50,6 +50,10 @@ class Medicine extends Model
         'price' => 'float',
     ];
 
+    protected $appends = [
+        'images',
+    ];
+
     public function getImagesAttribute()
     {
         if (!empty($this->image_urls)) {

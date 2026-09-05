@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Medicine;
 use App\Models\Shop;
+use App\Models\Setting;
 use Illuminate\Http\Request;
 
 class CartController extends Controller
@@ -167,229 +168,42 @@ class CartController extends Controller
             return redirect('/smartcart')->with('error', 'Cart is empty!');
         }
 
-        $allShops = Shop::where('status', 'approved')->where('is_online', true)->get();
-        $matches = [];
-
-        foreach ($allShops as $shop) {
-            $available = [];
-            $missing = [];
-            $totalPrice = 0;
-
-            foreach ($cartItems as $med) {
-                // Generate inv key matches
-                $invKey = preg_replace('/(\s+\d+mg|\s+\d+g|\s+mg)/i', '', $med->name);
-                
-                // Look up in inventories relation
-                $inv = $shop->inventories()
-                            ->where(function($q) use ($med, $invKey) {
-                                $q->where('medicine_id', $med->id)
-                                  ->orWhere('name', 'like', "%{$invKey}%");
-                            })->first();
-
-                if ($inv) {
-                    $mrp = $med->mrp > 0 ? (float)$med->mrp : (float)$inv->price;
-                    $itemDiscountPct = ($mrp > $inv->price && $mrp > 0) ? round((($mrp - $inv->price) / $mrp) * 100) : 0;
-                    $available[] = [
-                        'id' => $med->id,
-                        'name' => $med->name,
-                        'emoji' => $med->emoji,
-                        'mrp' => $mrp,
-                        'shopPrice' => (float)$inv->price,
-                        'itemDiscountPct' => $itemDiscountPct
-                    ];
-                    $totalPrice += $inv->price * $cart[$med->id];
-                } else {
-                    $missing[] = $med;
-                }
-            }
-
-            // Compute real-time distance using geocoded session coordinates rather than static database fallbacks
-            // Compute real-time distance using geocoded session coordinates or city defaults
-            $uLat = session('user_lat');
-            $uLng = session('user_lng');
-
-            if (!$uLat || !$uLng) {
-                $userLoc = session('user_location', '');
-                if (stripos($userLoc, 'Jaipur') !== false) {
-                    $uLat = 26.9124;
-                    $uLng = 75.7873;
-                } else if (stripos($userLoc, 'Patna') !== false) {
-                    $uLat = 25.5941;
-                    $uLng = 85.1376;
-                } else {
-                    $uLat = 26.1209;
-                    $uLng = 85.3647;
-                }
-            }
-
-            $realDistance = (float)($shop->distance_km ?? 99.0);
-            if ($uLat && $uLng && $shop->latitude && $shop->longitude) {
-                $theta = $uLng - $shop->longitude;
-                $dist = sin(deg2rad($uLat)) * sin(deg2rad($shop->latitude)) + cos(deg2rad($uLat)) * cos(deg2rad($shop->latitude)) * cos(deg2rad($theta));
-                $dist = acos(min(1.0, max(-1.0, $dist)));
-                $dist = rad2deg($dist);
-                $miles = $dist * 60 * 1.1515;
-                $realDistance = round($miles * 1.609344, 1);
-            }
-            $shop->distance_km = $realDistance;
-
-            // Calculate delivery charges according to shop settings
-            $deliveryCharge = 0;
-            if ($shop->delivery_charge_type === 'fixed') {
-                $deliveryCharge = (float)($shop->delivery_charge_fixed ?? 20);
-            } else {
-                $deliveryCharge = round($realDistance * ($shop->delivery_charge_per_km ?? 8));
-            }
-
-            // Calculate active offers and bill payment discount (applies if offer_min_bill is 0 or if totalPrice >= offer_min_bill)
-            $discount = 0;
-            if ($shop->offer_discount_pct > 0 && ($shop->offer_min_bill <= 0 || $totalPrice >= $shop->offer_min_bill)) {
-                $discount = round(($totalPrice * $shop->offer_discount_pct) / 100, 2);
-            }
-
-            // Check delivery radius constraint
-            $isOutOfRadius = $realDistance > ($shop->delivery_radius_km ?? 10.0);
-
-            // ONLY push matches if the shop has at least 1 matching medicine!
-            if (count($available) > 0) {
-                $matches[] = [
-                    'shop' => $shop,
-                    'available' => $available,
-                    'missing' => $missing,
-                    'matchCount' => count($available),
-                    'totalPrice' => $totalPrice,
-                    'deliveryCharge' => $deliveryCharge,
-                    'discount' => $discount,
-                    'isOutOfRadius' => $isOutOfRadius,
-                    'totalWithDelivery' => $totalPrice - $discount + ($shop->delivery_enabled && !$isOutOfRadius ? $deliveryCharge : 0)
-                ];
-            }
+        $itemsTotal = 0;
+        foreach ($cartItems as $med) {
+            $qty = $cart[$med->id] ?? 1;
+            $itemsTotal += (float)$med->price * $qty;
         }
 
-        if (empty($matches)) {
-            foreach ($allShops as $shop) {
-                $available = [];
-                $missing = [];
-                $totalPrice = 0;
+        // Global Delivery Charges & Minimum Order Rules from Admin Settings
+        $globalDeliveryCharge = (float) Setting::getVal('delivery_charge', '20');
+        $minDeliveryOrder = (float) Setting::getVal('min_delivery_order', '150');
+        $freeDeliveryMin = (float) Setting::getVal('free_delivery_min', '500');
 
-                foreach ($cartItems as $med) {
-                    $missing[] = $med;
-                    $mrp = $med->mrp > 0 ? (float)$med->mrp : 50;
-                    $totalPrice += $mrp * $cart[$med->id];
-                }
+        $deliveryCharge = ($freeDeliveryMin > 0 && $itemsTotal >= $freeDeliveryMin) ? 0 : $globalDeliveryCharge;
 
-                $uLat = session('user_lat');
-                $uLng = session('user_lng');
-                if (!$uLat || !$uLng) {
-                    $userLoc = session('user_location', '');
-                    if (stripos($userLoc, 'Jaipur') !== false) {
-                        $uLat = 26.9124;
-                        $uLng = 75.7873;
-                    } else if (stripos($userLoc, 'Patna') !== false) {
-                        $uLat = 25.5941;
-                        $uLng = 85.1376;
-                    } else {
-                        $uLat = 26.1209;
-                        $uLng = 85.3647;
-                    }
-                }
-
-                $realDistance = (float)($shop->distance_km ?? 99.0);
-                if ($uLat && $uLng && $shop->latitude && $shop->longitude) {
-                    $theta = $uLng - $shop->longitude;
-                    $dist = sin(deg2rad($uLat)) * sin(deg2rad($shop->latitude)) + cos(deg2rad($uLat)) * cos(deg2rad($shop->latitude)) * cos(deg2rad($theta));
-                    $dist = acos(min(1.0, max(-1.0, $dist)));
-                    $dist = rad2deg($dist);
-                    $miles = $dist * 60 * 1.1515;
-                    $realDistance = round($miles * 1.609344, 1);
-                }
-                $shop->distance_km = $realDistance;
-
-                $deliveryCharge = 0;
-                if ($shop->delivery_enabled) {
-                    if ($shop->delivery_charge_type === 'fixed') {
-                        $deliveryCharge = (float)($shop->delivery_charge_fixed ?? 20);
-                    } else {
-                        $deliveryCharge = round($realDistance * ($shop->delivery_charge_per_km ?? 8));
-                    }
-                }
-
-                $discount = 0;
-                if ($shop->offer_discount_pct > 0 && ($shop->offer_min_bill <= 0 || $totalPrice >= $shop->offer_min_bill)) {
-                    $discount = round(($totalPrice * $shop->offer_discount_pct) / 100, 2);
-                }
-
-                $isOutOfRadius = $realDistance > ($shop->delivery_radius_km ?? 10.0);
-
-                $matches[] = [
-                    'shop' => $shop,
-                    'available' => $available,
-                    'missing' => $missing,
-                    'matchCount' => 0,
-                    'totalPrice' => $totalPrice,
-                    'deliveryCharge' => $deliveryCharge,
-                    'discount' => $discount,
-                    'isOutOfRadius' => $isOutOfRadius,
-                    'totalWithDelivery' => $totalPrice - $discount + ($shop->delivery_enabled && !$isOutOfRadius ? $deliveryCharge : 0)
-                ];
-            }
+        $discountAmount = 0;
+        $appliedCoupon = session('applied_coupon');
+        if ($appliedCoupon && isset($appliedCoupon['discount'])) {
+            $discountAmount = (float)$appliedCoupon['discount'];
         }
 
-        // Sort: highest match count first (maximum medicines available), then closest shop distance, then price
-        usort($matches, function ($a, $b) {
-            if ($b['matchCount'] !== $a['matchCount']) {
-                return $b['matchCount'] - $a['matchCount'];
-            }
-            $distA = (float)$a['shop']->distance_km;
-            $distB = (float)$b['shop']->distance_km;
-            if (abs($distA - $distB) > 0.001) {
-                return $distA <=> $distB;
-            }
-            return $a['totalWithDelivery'] <=> $b['totalWithDelivery'];
-        });
-
-        // If user bought from a specific shop store URL (e.g. search?shop_id=18), prioritize it!
-        $reqShopId = request('shop_id');
-        $preferDelivery = request('prefer_delivery');
-        $bestMatch = null;
-
-        if ($reqShopId) {
-            foreach ($matches as $idx => $m) {
-                if ((int)$m['shop']->id === (int)$reqShopId) {
-                    $bestMatch = $m;
-                    // Remove from original list and prepend to array
-                    unset($matches[$idx]);
-                    array_unshift($matches, $bestMatch);
-                    break;
-                }
-            }
+        $defaultShop = Shop::first();
+        if (!$defaultShop) {
+            $defaultShop = Shop::create([
+                'name' => 'Dawalo Central Hub',
+                'phone' => '9939717283',
+                'address' => 'Central Hub, Muzaffarpur',
+                'status' => 'approved',
+                'is_online' => true
+            ]);
         }
-
-        // If user clicked "Find Stores Who Can Deliver", pick best shop with delivery + medicines
-        if ($preferDelivery && !$bestMatch) {
-            foreach ($matches as $idx => $m) {
-                if ($m['shop']->delivery_enabled && !$m['isOutOfRadius'] && $m['matchCount'] > 0) {
-                    $bestMatch = $m;
-                    unset($matches[$idx]);
-                    array_unshift($matches, $bestMatch);
-                    break;
-                }
-            }
-        }
-        
-        if (!$bestMatch) {
-            $bestMatch = $matches[0] ?? null;
-        }
-        
-        if (!$bestMatch) {
-            return redirect('/smartcart')->with('error', 'No approved online pharmacies found near you!');
-        }
-
-        // Limit matches to maximum 5 nearest shops
-        $matches = array_slice($matches, 0, 5);
 
         $cartCount = array_sum($cart);
 
-        return view('customer.cart_results', compact('bestMatch', 'matches', 'cart', 'cartItems', 'cartCount'));
+        return view('customer.cart_results', compact(
+            'cart', 'cartItems', 'cartCount', 'itemsTotal', 
+            'deliveryCharge', 'discountAmount', 'defaultShop',
+            'globalDeliveryCharge', 'minDeliveryOrder', 'freeDeliveryMin'
+        ));
     }
 }

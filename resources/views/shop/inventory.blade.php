@@ -163,11 +163,12 @@
                style="background:#fff; border-radius:16px; padding:12px; display:flex; gap:12px; align-items:center; box-shadow:0 2px 12px rgba(0,0,0,0.05); margin:0;">
             <!-- Image thumbnail box with Camera overlay -->
             <div style="width:80px; height:80px; border-radius:12px; background:#F8FAFF; display:flex; align-items:center; justify-content:center; font-size:32px; flex-shrink:0; overflow:hidden; position:relative; border:1px solid #E5E7EB; cursor:pointer;" onclick="document.getElementById('file-input-{{ $item->id }}').click()" title="📷 Click to add photo via Camera or Gallery">
-              @if(!empty($item->images))
-                <img src="{{ asset($item->images[0]) }}" referrerpolicy="no-referrer" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';" style="width:100%; height:100%; object-fit:contain;">
-                <div style="display:none; width:100%; height:100%; align-items:center; justify-content:center; background:#F8FAFF; font-size:32px;">{{ $item->medicine ? ($item->medicine->emoji ?? '💊') : '💊' }}</div>
-              @elseif($item->medicine && !empty($item->medicine->images))
-                <img src="{{ asset($item->medicine->images[0]) }}" referrerpolicy="no-referrer" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';" style="width:100%; height:100%; object-fit:contain;">
+              @php
+                $itemImg = !empty($item->images) ? $item->images[0] : ($item->medicine && !empty($item->medicine->images) ? $item->medicine->images[0] : null);
+                $itemImgUrl = $itemImg ? ((strpos($itemImg, 'http://') === 0 || strpos($itemImg, 'https://') === 0) ? $itemImg : asset($itemImg)) : null;
+              @endphp
+              @if($itemImgUrl)
+                <img src="{{ $itemImgUrl }}" referrerpolicy="no-referrer" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';" style="width:100%; height:100%; object-fit:contain;">
                 <div style="display:none; width:100%; height:100%; align-items:center; justify-content:center; background:#F8FAFF; font-size:32px;">{{ $item->medicine ? ($item->medicine->emoji ?? '💊') : '💊' }}</div>
               @else
                 <div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:#F8FAFF; font-size:32px;">{{ $item->medicine ? ($item->medicine->emoji ?? '💊') : '💊' }}</div>
@@ -195,7 +196,10 @@
               @if(count($imgList) > 1)
                 <div style="display:flex; gap:4px; margin-top:6px; flex-wrap:wrap;">
                   @foreach($imgList as $img)
-                    <img src="{{ asset($img) }}" style="width:26px; height:26px; border-radius:4px; object-fit:cover; border:1px solid #ddd;">
+                    @php
+                      $subImgUrl = (strpos($img, 'http://') === 0 || strpos($img, 'https://') === 0) ? $img : asset($img);
+                    @endphp
+                    <img src="{{ $subImgUrl }}" referrerpolicy="no-referrer" style="width:26px; height:26px; border-radius:4px; object-fit:cover; border:1px solid #ddd;">
                   @endforeach
                 </div>
               @endif

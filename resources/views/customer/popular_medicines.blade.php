@@ -53,13 +53,15 @@
           
           <a href="{{ url('/medicine/'.$medicine->id) }}" style="text-decoration:none; display:block;">
             <div style="width:100%; height:130px; background:#F8FAFC; border-radius:12px; margin-bottom:12px; display:flex; align-items:center; justify-content:center; overflow:hidden; padding:10px;">
-              @if($medicine->images)
+              @if(!empty($medicine->images))
                 @php
                   $images = is_array($medicine->images) ? $medicine->images : json_decode($medicine->images, true);
                   $firstImage = is_array($images) && !empty($images) ? $images[0] : null;
+                  $firstImgUrl = $firstImage ? ((strpos($firstImage, 'http://') === 0 || strpos($firstImage, 'https://') === 0) ? $firstImage : asset($firstImage)) : null;
                 @endphp
-                @if($firstImage)
-                  <img src="{{ asset($firstImage) }}" style="max-width:100%; max-height:100%; width:auto; height:auto; object-fit:contain;" alt="{{ $medicine->name }}">
+                @if($firstImgUrl)
+                  <img src="{{ $firstImgUrl }}" referrerpolicy="no-referrer" style="max-width:100%; max-height:100%; width:auto; height:auto; object-fit:contain;" alt="{{ $medicine->name }}" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='inline-block';">
+                  <span style="font-size:60px; display:none;">{{ $medicine->emoji ?? '💊' }}</span>
                 @else
                   <span style="font-size:60px;">{{ $medicine->emoji ?? '💊' }}</span>
                 @endif
