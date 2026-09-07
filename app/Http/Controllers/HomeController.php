@@ -108,7 +108,7 @@ class HomeController extends Controller
 
     public function search(Request $request)
     {
-        $query = $request->input('q', '');
+        $rawQuery = trim(str_replace('+', ' ', $request->input('q', '')));
         $shopId = $request->input('shop_id');
         $selectedCategories = $request->input('categories', []);
         $selectedShop = null;
@@ -116,15 +116,16 @@ class HomeController extends Controller
         $medQuery = Medicine::query();
         
         if ($shopId) {
-            $selectedShop = Shop::findOrFail($shopId);
-            // Joint query with inventories table to fetch only mapping medicines of this shop. No heavy plucking array.
-            $medQuery->join('inventories', 'medicines.id', '=', 'inventories.medicine_id')
-                     ->where('inventories.shop_id', $shopId)
-                     ->select('medicines.*', 'inventories.price as shop_price', 'inventories.quantity as shop_qty');
+            $selectedShop = Shop::find($shopId);
+            if ($selectedShop) {
+                $medQuery->join('inventories', 'medicines.id', '=', 'inventories.medicine_id')
+                         ->where('inventories.shop_id', $shopId)
+                         ->select('medicines.*', 'inventories.price as shop_price', 'inventories.quantity as shop_qty');
+            }
         }
 
-        if ($query) {
-            $words = array_filter(explode(' ', trim($query)));
+        if ($rawQuery) {
+            $words = array_filter(explode(' ', $rawQuery));
             $medQuery->where(function($q) use ($words) {
                 foreach ($words as $word) {
                     $q->where('medicines.name', 'like', '%' . $word . '%');
@@ -136,15 +137,16 @@ class HomeController extends Controller
             $medQuery->whereIn('medicines.category', $selectedCategories);
         }
 
-        // Order by: Exact/Prefix match first, then medicines having images, then alphabetical
-        $cleanQ = addslashes(trim($query));
-        $medQuery->orderByRaw("CASE 
-            WHEN medicines.name LIKE '{$cleanQ}%' THEN 0 
-            WHEN medicines.name LIKE '% {$cleanQ}%' THEN 1 
-            WHEN medicines.images IS NOT NULL AND medicines.images != '[]' AND medicines.images != '' THEN 2 
-            ELSE 3 
-        END ASC")
-        ->orderBy('medicines.name', 'asc');
+        // Order by: Exact/Prefix match first, then alphabetical
+        $cleanQ = addslashes($rawQuery);
+        if (!empty($cleanQ)) {
+            $medQuery->orderByRaw("CASE 
+                WHEN medicines.name LIKE '{$cleanQ}%' THEN 0 
+                WHEN medicines.name LIKE '% {$cleanQ}%' THEN 1 
+                ELSE 2 
+            END ASC");
+        }
+        $medQuery->orderBy('medicines.name', 'asc');
 
         // Paginate in chunks (40 items per page) so server does not run out of memory (prevents 503)
         $medicines = $medQuery->paginate(40);
@@ -287,14 +289,16 @@ class HomeController extends Controller
 
     public function medicineSearchSuggestions(\Illuminate\Http\Request $request)
     {
-        $q = trim($request->input('q', ''));
+        $q = trim(str_replace('+', ' ', $request->input('q', '')));
         if (strlen($q) < 1) {
             return response()->json([]);
         }
         
-        // Always search for medicines STARTING with the query (not anywhere in middle)
-        $meds = \App\Models\Medicine::where('name', 'like', $q . '%')
+        $cleanQ = addslashes($q);
+        $meds = \App\Models\Medicine::where('name', 'like', '%' . $q . '%')
+            ->orderByRaw("CASE WHEN name LIKE '{$cleanQ}%' THEN 0 WHEN name LIKE '% {$cleanQ}%' THEN 1 ELSE 2 END ASC")
             ->orderBy('name', 'asc')
+            ->limit(20)
             ->get();
         
         return response()->json($meds);

@@ -155,6 +155,102 @@ class MedicineSeeder extends Seeder
         }
         fclose($file);
 
+        // Ensure popular Dolo medicines are included
+        $popularDolo = [
+            [
+                'id' => $idCounter++,
+                'name' => 'Dolo 650 Tablet',
+                'category' => 'Fever',
+                'emoji' => '🌡️',
+                'mrp' => 30.75,
+                'price' => 24.50,
+                'product_id' => 'DRS_DOLO650',
+                'marketer' => 'Micro Labs Ltd',
+                'composition' => 'Paracetamol (650mg)',
+                'product_form' => 'Tablet',
+                'prescription_required' => 'No',
+                'primary_use' => 'Fever and Mild to Moderate Pain relief',
+                'image_urls' => 'https://medicinedata.in/drg/DRS003256_1.jpg',
+                'created_at' => now(),
+                'updated_at' => now()
+            ],
+            [
+                'id' => $idCounter++,
+                'name' => 'Dolo 500 Tablet',
+                'category' => 'Fever',
+                'emoji' => '🌡️',
+                'mrp' => 18.50,
+                'price' => 14.80,
+                'product_id' => 'DRS_DOLO500',
+                'marketer' => 'Micro Labs Ltd',
+                'composition' => 'Paracetamol (500mg)',
+                'product_form' => 'Tablet',
+                'prescription_required' => 'No',
+                'primary_use' => 'Fever and Headache relief',
+                'image_urls' => 'https://medicinedata.in/drg/DRS003256_2.jpg',
+                'created_at' => now(),
+                'updated_at' => now()
+            ],
+            [
+                'id' => $idCounter++,
+                'name' => 'Dolo Cold Tablet',
+                'category' => 'Allergy',
+                'emoji' => '🤧',
+                'mrp' => 45.00,
+                'price' => 36.00,
+                'product_id' => 'DRS_DOLOCOLD',
+                'marketer' => 'Micro Labs Ltd',
+                'composition' => 'Paracetamol (500mg) + Phenylephrine (10mg) + Chlorpheniramine Maleate (2mg)',
+                'product_form' => 'Tablet',
+                'prescription_required' => 'No',
+                'primary_use' => 'Common cold, fever, runny nose and body pain',
+                'image_urls' => 'https://medicinedata.in/drg/DRS012111_1.jpg',
+                'created_at' => now(),
+                'updated_at' => now()
+            ],
+            [
+                'id' => $idCounter++,
+                'name' => 'Dolo-120 Suspension 60ml',
+                'category' => 'Fever',
+                'emoji' => '🧴',
+                'mrp' => 38.00,
+                'price' => 30.40,
+                'product_id' => 'DRS_DOLO120',
+                'marketer' => 'Micro Labs Ltd',
+                'composition' => 'Paracetamol (120mg/5ml)',
+                'product_form' => 'Syrup',
+                'prescription_required' => 'No',
+                'primary_use' => 'Pediatric fever and pain relief',
+                'image_urls' => 'https://medicinedata.in/drg/DRS012111_2.jpg',
+                'created_at' => now(),
+                'updated_at' => now()
+            ],
+            [
+                'id' => $idCounter++,
+                'name' => 'Dolo-250 Suspension 60ml',
+                'category' => 'Fever',
+                'emoji' => '🧴',
+                'mrp' => 48.00,
+                'price' => 38.40,
+                'product_id' => 'DRS_DOLO250',
+                'marketer' => 'Micro Labs Ltd',
+                'composition' => 'Paracetamol (250mg/5ml)',
+                'product_form' => 'Syrup',
+                'prescription_required' => 'No',
+                'primary_use' => 'Children fever and body pain relief',
+                'image_urls' => 'https://medicinedata.in/drg/DRS012111_3.jpg',
+                'created_at' => now(),
+                'updated_at' => now()
+            ]
+        ];
+
+        foreach ($popularDolo as $pDolo) {
+            $nameLower = strtolower($pDolo['name']);
+            if (!isset($uniqueNames[$nameLower])) {
+                $medsToInsert[] = $pDolo;
+            }
+        }
+
         // Bulk insert in chunks of 200 items to prevent memory limits
         foreach (array_chunk($medsToInsert, 200) as $chunk) {
             DB::table('medicines')->insert($chunk);
