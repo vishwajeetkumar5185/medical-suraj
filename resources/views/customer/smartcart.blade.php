@@ -133,7 +133,7 @@
           🚀 Proceed to Checkout ({{ $cartCount }} items)
         </a>
       @else
-        <a href="{{ url('/login') }}" style="display:block; width:100%; padding:16px; background:linear-gradient(135deg, #10B981, #059669); color:#fff; text-align:center; border-radius:10px; font-weight:800; font-size:16px; text-decoration:none; box-shadow:0 4px 12px rgba(16,185,129,0.4);">
+        <a href="{{ url('/login?redirect=' . urlencode(url('/smartcart'))) }}" style="display:block; width:100%; padding:16px; background:linear-gradient(135deg, #10B981, #059669); color:#fff; text-align:center; border-radius:10px; font-weight:800; font-size:16px; text-decoration:none; box-shadow:0 4px 12px rgba(16,185,129,0.4);">
           🔐 Login to Checkout ({{ $cartCount }} items)
         </a>
       @endauth

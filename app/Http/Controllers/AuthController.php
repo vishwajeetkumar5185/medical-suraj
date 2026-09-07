@@ -13,11 +13,19 @@ use App\Mail\ResetPasswordMail;
 
 class AuthController extends Controller
 {
-    public function showLogin()
+    public function showLogin(Request $request)
     {
         if (Auth::check()) {
             return redirect('/');
         }
+        
+        // Store the intended URL (where user came from) in session
+        if ($request->has('redirect')) {
+            session(['login_redirect' => $request->get('redirect')]);
+        } elseif ($request->headers->get('referer')) {
+            session(['login_redirect' => $request->headers->get('referer')]);
+        }
+        
         return view('auth.login');
     }
 
@@ -32,11 +40,21 @@ class AuthController extends Controller
             $request->session()->regenerate();
             
             $user = Auth::user();
+            
+            // Check for stored redirect URL first
+            $redirectUrl = session('login_redirect');
+            if ($redirectUrl) {
+                session()->forget('login_redirect');
+                return redirect($redirectUrl)->with('success', 'Logged in successfully!');
+            }
+            
+            // Role-based redirects
             if ($user->role === 'admin') {
                 return redirect('/admin')->with('success', 'Logged in as Admin!');
             } elseif ($user->role === 'shop_owner') {
                 return redirect('/shop/dashboard')->with('success', 'Logged in to store dashboard!');
             }
+            
             return redirect()->intended('/')->with('success', 'Logged in successfully!');
         }
 
@@ -45,11 +63,19 @@ class AuthController extends Controller
         ])->onlyInput('email');
     }
 
-    public function showRegister()
+    public function showRegister(Request $request)
     {
         if (Auth::check()) {
             return redirect('/');
         }
+        
+        // Store the intended URL (where user came from) in session
+        if ($request->has('redirect')) {
+            session(['register_redirect' => $request->get('redirect')]);
+        } elseif ($request->headers->get('referer')) {
+            session(['register_redirect' => $request->headers->get('referer')]);
+        }
+        
         return view('auth.register');
     }
 
@@ -71,6 +97,13 @@ class AuthController extends Controller
         ]);
 
         Auth::login($user);
+
+        // Check for stored redirect URL first
+        $redirectUrl = session('register_redirect');
+        if ($redirectUrl) {
+            session()->forget('register_redirect');
+            return redirect($redirectUrl)->with('success', 'Account registered successfully!');
+        }
 
         return redirect('/')->with('success', 'Account registered successfully!');
     }

@@ -150,6 +150,15 @@ class CartController extends Controller
             return redirect('/smartcart')->with('error', 'Cart is empty!');
         }
 
+        // Check if user is logged in for checkout process
+        if (!auth()->check()) {
+            // Store current URL for redirect after login
+            session(['login_redirect' => url('/smartcart/results')]);
+            
+            // Redirect to login with message
+            return redirect('/login')->with('info', 'Please login to continue with checkout.');
+        }
+
         $itemsTotal = 0;
         foreach ($cartItems as $med) {
             $qty = $cart[$med->id] ?? 1;

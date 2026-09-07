@@ -97,7 +97,7 @@
       <div style="font-size:13px; font-weight:700; color:#64748B; margin-bottom:12px; text-align:center;">Don't have an account?</div>
       
       <!-- Customer Registration -->
-      <a href="{{ url('/register') }}" style="display:block; padding:12px 16px; background:#F0F9FF; border:2px solid #0EA5E9; border-radius:10px; margin-bottom:10px; text-decoration:none; transition:all 0.2s;"
+      <a href="{{ url('/register?redirect=' . urlencode(session('login_redirect', url('/')))) }}" style="display:block; padding:12px 16px; background:#F0F9FF; border:2px solid #0EA5E9; border-radius:10px; margin-bottom:10px; text-decoration:none; transition:all 0.2s;"
          onmouseover="this.style.background='#E0F2FE';"
          onmouseout="this.style.background='#F0F9FF';">
         <div style="display:flex; align-items:center; gap:10px;">

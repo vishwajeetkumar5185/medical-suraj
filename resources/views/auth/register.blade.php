@@ -15,7 +15,7 @@
   <!-- Header -->
   <div style="background:linear-gradient(180deg, #0EA5E9 0%, #0284C7 100%); padding:16px;">
     <div style="display:flex; align-items:center; gap:12px;">
-      <a href="{{ url('/login') }}" style="width:40px; height:40px; background:rgba(255,255,255,0.2); border-radius:50%; display:flex; align-items:center; justify-content:center; text-decoration:none;">
+      <a href="{{ session('register_redirect') ? session('register_redirect') : url('/login') }}" style="width:40px; height:40px; background:rgba(255,255,255,0.2); border-radius:50%; display:flex; align-items:center; justify-content:center; text-decoration:none;">
         <span style="color:#fff; font-size:20px;">←</span>
       </a>
       <div style="flex:1;">
@@ -130,7 +130,7 @@
     <div style="background:#fff; border-radius:16px; padding:20px; margin-bottom:16px; box-shadow:0 2px 8px rgba(0,0,0,0.06);">
       
       <!-- Login Link -->
-      <a href="{{ url('/login') }}" style="display:block; padding:12px 16px; background:#F0F9FF; border:2px solid #0EA5E9; border-radius:10px; margin-bottom:10px; text-decoration:none; transition:all 0.2s;"
+      <a href="{{ url('/login?redirect=' . urlencode(session('register_redirect', url('/')))) }}" style="display:block; padding:12px 16px; background:#F0F9FF; border:2px solid #0EA5E9; border-radius:10px; margin-bottom:10px; text-decoration:none; transition:all 0.2s;"
          onmouseover="this.style.background='#E0F2FE';"
          onmouseout="this.style.background='#F0F9FF';">
         <div style="display:flex; align-items:center; gap:10px;">
