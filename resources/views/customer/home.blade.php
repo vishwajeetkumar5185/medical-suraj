@@ -12,6 +12,41 @@
   body { background: #F5F7FA !important; }
   .screen { overflow: visible !important; height: auto !important; min-height: 100vh !important; }
   
+  /* PWA Install Banner Animations */
+  @keyframes slideDown {
+    from {
+      transform: translateY(-100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+  
+  @keyframes slideUp {
+    from {
+      transform: translateY(0);
+      opacity: 1;
+    }
+    to {
+      transform: translateY(-100%);
+      opacity: 0;
+    }
+  }
+  
+  /* Install Button Effects */
+  #install-app-btn:hover {
+    background: #f0f9ff !important;
+    transform: scale(1.05);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15) !important;
+  }
+  
+  #dismiss-install-btn:hover {
+    background: rgba(255,255,255,0.25) !important;
+    transform: scale(1.1);
+  }
+  
   /* Hide scrollbar for Popular Dawaiyan section */
   div[style*="overflow-x:auto"]::-webkit-scrollbar {
     display: none;
@@ -72,22 +107,19 @@
       </h2>
     </div>
 
-    <!-- Search Box -->
-    <form action="{{ url('/search') }}" method="GET" style="margin-bottom:14px;" onsubmit="event.preventDefault(); triggerHomeSearch();">
-      <div style="background:#fff; border-radius:12px; padding:12px 16px; display:flex; align-items:center; gap:10px; box-shadow:0 2px 8px rgba(0,0,0,0.08);">
-        <span style="font-size:20px; color:#94A3B8;">🔍</span>
-        <input 
-          type="text" 
-          name="q"
-          id="home-search-input"
-          placeholder="Medicine ya lab test search karein..." 
-          style="flex:1; border:none; outline:none; font-size:14px; color:#94A3B8; font-weight:500; background:transparent;"
-          autocomplete="off"
-          oninput="debouncedHomeSearchSuggestions(this.value)"
-        >
+    <!-- Search Box - Clickable Redirect to Search Page -->
+    <div style="margin-bottom:14px;">
+      <div 
+        onclick="redirectToSearchPage()" 
+        style="background:#fff; border-radius:12px; padding:12px 16px; display:flex; align-items:center; gap:10px; box-shadow:0 2px 8px rgba(0,0,0,0.08); cursor:pointer; transition:all 0.2s ease;"
+        onmouseover="this.style.transform='scale(1.02)'; this.style.boxShadow='0 4px 16px rgba(0,0,0,0.12)';"
+        onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.08)';"
+      >
+        <span style="font-size:20px; color:#3B82F6;">🔍</span>
+        <span style="flex:1; font-size:14px; color:#94A3B8; font-weight:500;">Medicine ya lab test search karein...</span>
+        <span style="font-size:16px; color:#3B82F6;">›</span>
       </div>
-      <div id="home-search-autocomplete" style="display:none; position:absolute; left:16px; right:16px; background:#fff; border-radius:12px; margin-top:8px; box-shadow:0 8px 24px rgba(0,0,0,0.12); max-height:500px; overflow-y:auto; z-index:9999;"></div>
-    </form>
+    </div>
 
     <!-- Category Pills -->
     <div style="display:flex; gap:8px; overflow-x:auto; padding-bottom:2px;">
@@ -181,7 +213,7 @@
           <a href="{{ url('/search?q=Cold') }}" style="text-decoration:none;">
             <div style="display:flex; flex-direction:column; gap:8px;">
               <div style="width:100%; aspect-ratio:1/1; overflow:hidden; border-radius:12px;">
-                <img src="https://medicinedata.in/drg/DRS003256_1.jpg" style="width:100%; height:100%; object-fit:cover;" alt="Cold & Cough">
+                <img src="https://res.cloudinary.com/js6syrfv/image/upload/v1788766580/Blue_and_Black_Modern_E-Sport_Gaming_Initial_E_Abstract_Mark_Logo.png" style="width:100%; height:100%; object-fit:cover;" alt="Cold & Cough">
               </div>
               <div style="font-size:11px; font-weight:700; color:#1A1A1A; text-align:center; line-height:1.2;">Cold & Cough</div>
             </div>
@@ -189,7 +221,7 @@
           <a href="{{ url('/search?q=Fever') }}" style="text-decoration:none;">
             <div style="display:flex; flex-direction:column; gap:8px;">
               <div style="width:100%; aspect-ratio:1/1; overflow:hidden; border-radius:12px;">
-                <img src="https://medicinedata.in/drg/DRS352322_1.jpg" style="width:100%; height:100%; object-fit:cover;" alt="Fever & Pain">
+                <img src="https://res.cloudinary.com/js6syrfv/image/upload/v1788766534/Blue_and_Black_Modern_E-Sport_Gaming_Initial_E_Abstract_Mark_Logo_1.png" style="width:100%; height:100%; object-fit:cover;" alt="Fever & Pain">
               </div>
               <div style="font-size:11px; font-weight:700; color:#1A1A1A; text-align:center; line-height:1.2;">Fever & Pain</div>
             </div>
@@ -197,7 +229,7 @@
           <a href="{{ url('/search?q=Pain') }}" style="text-decoration:none;">
             <div style="display:flex; flex-direction:column; gap:8px;">
               <div style="width:100%; aspect-ratio:1/1; overflow:hidden; border-radius:12px;">
-                <img src="https://medicinedata.in/drg/DRS008085_1.jpg" style="width:100%; height:100%; object-fit:cover;" alt="Pain Relief">
+                <img src="https://res.cloudinary.com/js6syrfv/image/upload/v1788766534/Gemini_Generated_Image_wb0kqjwb0kqjwb0k.png" style="width:100%; height:100%; object-fit:cover;" alt="Pain Relief">
               </div>
               <div style="font-size:11px; font-weight:700; color:#1A1A1A; text-align:center; line-height:1.2;">Pain Relief</div>
             </div>
@@ -205,7 +237,7 @@
           <a href="{{ url('/search?q=Heart') }}" style="text-decoration:none;">
             <div style="display:flex; flex-direction:column; gap:8px;">
               <div style="width:100%; aspect-ratio:1/1; overflow:hidden; border-radius:12px;">
-                <img src="https://medicinedata.in/drg/DRS030209_1.jpg" style="width:100%; height:100%; object-fit:cover;" alt="Heart Care">
+                <img src="https://res.cloudinary.com/js6syrfv/image/upload/v1788766535/Gemini_Generated_Image_ivjhanivjhanivjh.png" style="width:100%; height:100%; object-fit:cover;" alt="Heart Care">
               </div>
               <div style="font-size:11px; font-weight:700; color:#1A1A1A; text-align:center; line-height:1.2;">Heart Care</div>
             </div>
@@ -213,7 +245,7 @@
           <a href="{{ url('/search?q=Diabetes') }}" style="text-decoration:none;">
             <div style="display:flex; flex-direction:column; gap:8px;">
               <div style="width:100%; aspect-ratio:1/1; overflow:hidden; border-radius:12px;">
-                <img src="https://medicinedata.in/drg/DRS073799_1.jpg" style="width:100%; height:100%; object-fit:cover;" alt="Diabetic">
+                <img src="https://res.cloudinary.com/js6syrfv/image/upload/v1788766534/Gemini_Generated_Image_cte40pcte40pcte4.png" style="width:100%; height:100%; object-fit:cover;" alt="Diabetic">
               </div>
               <div style="font-size:11px; font-weight:700; color:#1A1A1A; text-align:center; line-height:1.2;">Diabetic</div>
             </div>
@@ -221,7 +253,7 @@
           <a href="{{ url('/search?q=Blood Pressure') }}" style="text-decoration:none;">
             <div style="display:flex; flex-direction:column; gap:8px;">
               <div style="width:100%; aspect-ratio:1/1; overflow:hidden; border-radius:12px;">
-                <img src="https://medicinedata.in/drg/DRS094782_1.jpg" style="width:100%; height:100%; object-fit:cover;" alt="Blood Pressure">
+                <img src="https://res.cloudinary.com/js6syrfv/image/upload/v1788766534/Gemini_Generated_Image_szu5onszu5onszu5.png" style="width:100%; height:100%; object-fit:cover;" alt="Blood Pressure">
               </div>
               <div style="font-size:11px; font-weight:700; color:#1A1A1A; text-align:center; line-height:1.2;">Blood Pressure</div>
             </div>
@@ -278,7 +310,7 @@
               @csrf
               <input type="hidden" name="medicine_id" value="{{ $medicine->id }}">
               <input type="hidden" name="quantity" value="1">
-              <button type="submit" style="width:100%; background:#3B82F6; color:#fff; border:none; border-radius:10px; padding:10px; font-size:13px; font-weight:800; cursor:pointer; transition:background 0.2s ease;">+ Add</button>
+              <button type="submit" style="width:100%; background:#3B82F6; color:#fff; border:none; border-radius:10px; padding:10px; font-size:13px; font-weight:800; cursor:pointer; transition:all 0.2s ease;" onmouseover="this.style.background='#2563EB'" onmouseout="this.style.background='#3B82F6'">+ Add</button>
             </form>
           </div>
           @endforeach
@@ -382,7 +414,7 @@
         <span style="font-size:22px;">🛒</span>
       </div>
       @if($cartCount > 0)
-        <span style="position:absolute; top:-4px; right:4px; background:#EF4444; color:#fff; font-size:10px; font-weight:800; padding:2px 6px; border-radius:10px; min-width:18px; text-align:center; box-shadow:0 2px 4px rgba(0,0,0,0.2);">{{ $cartCount }}</span>
+        <span class="bottom-nav-cart-badge" style="position:absolute; top:-4px; right:4px; background:#EF4444; color:#fff; font-size:10px; font-weight:800; padding:2px 6px; border-radius:10px; min-width:18px; text-align:center; box-shadow:0 2px 4px rgba(0,0,0,0.2);">{{ $cartCount }}</span>
       @endif
       <span style="font-size:11px; font-weight:700; color:#64748B;">Cart</span>
     </a>
@@ -397,152 +429,166 @@
 </div>
 
 <script>
-  // Search functionality
-  let searchTimeout;
-
-  function clickPillSearch(term) {
-    document.getElementById('home-search-input').value = term;
-    triggerHomeSearch();
-  }
-
-  function debouncedHomeSearchSuggestions(query) {
-    clearTimeout(searchTimeout);
-    const dropdown = document.getElementById('home-search-autocomplete');
-    const q = query.trim();
-
-    if (q.length === 0) {
-      dropdown.style.display = 'none';
+// PWA Control System - Scoped to avoid conflicts
+(function() {
+  'use strict';
+  
+  let pwaPrompt = null; // Renamed to avoid conflicts
+  const PWA_DISMISS_KEY = 'dawalo_pwa_dismissed';
+  const PWA_INSTALL_KEY = 'dawalo_pwa_installed';
+  
+  // PWA Event Listeners
+  window.addEventListener('beforeinstallprompt', (e) => {
+    console.log('Browser PWA prompt intercepted');
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    
+    const dismissed = localStorage.getItem(PWA_DISMISS_KEY);
+    const installed = localStorage.getItem(PWA_INSTALL_KEY);
+    
+    if (dismissed || installed) {
+      console.log('PWA banner suppressed - user choice exists');
+      return false;
+    }
+    
+    pwaPrompt = e;
+    setTimeout(() => showPWABanner(), 2000);
+    return false;
+  });
+  
+  window.addEventListener('appinstalled', () => {
+    console.log('App installed successfully');
+    localStorage.setItem(PWA_INSTALL_KEY, Date.now().toString());
+    hidePWABanner();
+  });
+  
+  // Show PWA Banner
+  function showPWABanner() {
+    // Check user preferences
+    const dismissed = localStorage.getItem(PWA_DISMISS_KEY);
+    const installed = localStorage.getItem(PWA_INSTALL_KEY);
+    
+    if (dismissed || installed) {
+      console.log('Banner creation cancelled - user choice exists');
       return;
     }
-
-    // Show loading state
-    dropdown.style.display = 'block';
-    dropdown.innerHTML = '<div style="padding:16px; text-align:center; color:#64748B; font-size:13px;">🔍 Searching...</div>';
-
-    searchTimeout = setTimeout(() => {
-      fetch(`{{ url('/medicines/search') }}?q=${encodeURIComponent(q)}`)
-        .then(res => res.json())
-        .then(data => {
-          dropdown.innerHTML = '';
-          if (data.length === 0) {
-            dropdown.innerHTML = '<div style="padding:20px; text-align:center;"><div style="font-size:40px; margin-bottom:8px;">😔</div><div style="color:#64748B; font-size:14px; font-weight:600;">No medicines found</div><div style="color:#94A3B8; font-size:12px; margin-top:4px;">Try a different name</div></div>';
-            return;
-          }
-          
-          // Add header with count
-          const header = document.createElement('div');
-          header.style.cssText = 'padding:12px 16px; background:#f8fafc; border-bottom:1px solid #e5e7eb; font-size:14px; font-weight:700; color:#1f2937;';
-          header.textContent = 'Medicines';
-          dropdown.appendChild(header);
-          
-          // Add medicines list
-          data.forEach((item, index) => {
-            const row = document.createElement('div');
-            row.style.cssText = 'padding:12px 16px; border-bottom:1px solid #f3f4f6; display:flex; align-items:center; gap:12px; background:#fff;';
-            
-            // Get image
-            let imgSrc = null;
-            if (item.images) {
-              const imgs = Array.isArray(item.images) ? item.images : JSON.parse(item.images || '[]');
-              imgSrc = imgs[0] || null;
-            }
-            
-            let imgHtml = `<span style="font-size:24px;">${item.emoji || '💊'}</span>`;
-            if (imgSrc) {
-              const fullSrc = (imgSrc.startsWith('http://') || imgSrc.startsWith('https://')) ? imgSrc : `${imgSrc}`;
-              imgHtml = `<img src="${fullSrc}" style="width:100%; height:100%; object-fit:contain;" onerror="this.outerHTML='<span style=\\'font-size:24px;\\'>${item.emoji || '💊'}</span>'">`;
-            }
-
-            row.innerHTML = `
-              <div style="width:48px; height:48px; background:#f8fafc; border-radius:8px; display:flex; align-items:center; justify-content:center; flex-shrink:0; overflow:hidden;">
-                ${imgHtml}
-              </div>
-              <div style="flex:1; min-width:0;">
-                <div style="font-size:14px; font-weight:700; color:#1f2937; margin-bottom:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${item.name}</div>
-                <div style="font-size:12px; color:#0284c7; font-weight:600; margin-bottom:2px;">${item.composition || 'Strip of tablets'}</div>
-                <div style="font-size:11px; color:#6b7280;">${item.marketer || 'Manufacturer'}</div>
-              </div>
-              <div style="flex-shrink:0;">
-                <div style="font-size:16px; font-weight:700; color:#1f2937; margin-bottom:4px;">₹${item.price || '0.00'}</div>
-                <button onclick="addToCart(${item.id}); event.stopPropagation();" style="background:#0ea5e9; color:#fff; border:none; border-radius:6px; padding:6px 16px; font-size:12px; font-weight:700; cursor:pointer;">ADD</button>
-              </div>
-            `;
-            
-            row.addEventListener('click', () => {
-              window.location.href = `{{ url('/medicine') }}/${item.id}`;
-            });
-            
-            dropdown.appendChild(row);
-          });
-          
-          // Add "View all medicines" button if more than 10
-          if (data.length >= 10) {
-            const viewAllBtn = document.createElement('div');
-            viewAllBtn.style.cssText = 'padding:16px; text-align:center; background:#f0f9ff; cursor:pointer;';
-            viewAllBtn.innerHTML = '<span style="color:#0ea5e9; font-size:14px; font-weight:700;">View all medicines →</span>';
-            viewAllBtn.addEventListener('click', () => {
-              triggerHomeSearch();
-            });
-            dropdown.appendChild(viewAllBtn);
-          }
-        })
-        .catch(err => {
-          console.error(err);
-          dropdown.innerHTML = '<div style="padding:20px; text-align:center;"><div style="font-size:40px; margin-bottom:8px;">⚠️</div><div style="color:#EF4444; font-size:14px; font-weight:600;">Error loading medicines</div></div>';
-        });
-    }, 300);
+    
+    // Remove existing banner
+    const existingBanner = document.getElementById('pwa-banner');
+    if (existingBanner) existingBanner.remove();
+    
+    // Create banner
+    const banner = document.createElement('div');
+    banner.id = 'pwa-banner';
+    banner.style.cssText = `
+      position: fixed; top: 0; left: 0; right: 0; z-index: 999999;
+      background: linear-gradient(135deg, #3B82F6, #1D4ED8);
+      color: white; padding: 12px 16px;
+      display: flex; align-items: center; justify-content: space-between;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      animation: slideDown 0.4s ease-out;
+    `;
+    
+    banner.innerHTML = `
+      <div style="display: flex; align-items: center; gap: 12px; flex: 1;">
+        <div style="width: 44px; height: 44px; background: rgba(255,255,255,0.25); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 22px;">💊</div>
+        <div>
+          <div style="font-weight: 800; font-size: 16px;">Dawalo Install Karein</div>
+          <div style="font-size: 13px; opacity: 0.9;">Check pharmacy medicine inventory live</div>
+        </div>
+      </div>
+      <div style="display: flex; gap: 10px; align-items: center;">
+        <button id="pwa-install-btn" style="background: #fff; color: #3B82F6; border: none; padding: 10px 18px; border-radius: 8px; font-weight: 800; font-size: 14px; cursor: pointer;">Install</button>
+        <button id="pwa-dismiss-btn" style="background: rgba(255,255,255,0.15); color: #fff; border: none; padding: 8px 10px; font-size: 20px; cursor: pointer; border-radius: 6px;">×</button>
+      </div>
+    `;
+    
+    document.body.insertBefore(banner, document.body.firstChild);
+    document.body.style.paddingTop = '80px';
+    
+    // Event listeners
+    document.getElementById('pwa-install-btn').onclick = installPWA;
+    document.getElementById('pwa-dismiss-btn').onclick = dismissPWA;
+  }
+  
+  // Install PWA function
+  function installPWA() {
+    if (pwaPrompt) {
+      pwaPrompt.prompt();
+      pwaPrompt.userChoice.then((result) => {
+        if (result.outcome === 'accepted') {
+          localStorage.setItem(PWA_INSTALL_KEY, Date.now().toString());
+        } else {
+          localStorage.setItem(PWA_DISMISS_KEY, Date.now().toString());
+        }
+        hidePWABanner();
+        pwaPrompt = null;
+      });
+    } else {
+      localStorage.setItem(PWA_DISMISS_KEY, Date.now().toString());
+      hidePWABanner();
+    }
+  }
+  
+  // Dismiss PWA function
+  function dismissPWA() {
+    localStorage.setItem(PWA_DISMISS_KEY, Date.now().toString());
+    hidePWABanner();
+    pwaPrompt = null;
+  }
+  
+  // Hide banner function
+  function hidePWABanner() {
+    const banner = document.getElementById('pwa-banner');
+    if (banner) {
+      banner.style.animation = 'slideUp 0.3s ease-in';
+      setTimeout(() => {
+        banner.remove();
+        document.body.style.paddingTop = '0';
+      }, 300);
+    }
   }
 
-  // Add to cart function
+})(); // End PWA module
+// Global PWA utilities
+window.resetPWAStatus = function() {
+  localStorage.removeItem('dawalo_pwa_dismissed');
+  localStorage.removeItem('dawalo_pwa_installed');
+  const banner = document.getElementById('pwa-banner');
+  if (banner) banner.remove();
+  document.body.style.paddingTop = '0';
+  console.log('✅ PWA status reset');
+};
+
+window.checkPWAStatus = function() {
+  const dismissed = localStorage.getItem('dawalo_pwa_dismissed');
+  const installed = localStorage.getItem('dawalo_pwa_installed');
+  console.log('📱 PWA Status:', {
+    dismissed: dismissed ? new Date(parseInt(dismissed)).toLocaleString() : '❌ No',
+    installed: installed ? new Date(parseInt(installed)).toLocaleString() : '❌ No',
+    will_show: (!dismissed && !installed) ? '✅ Yes' : '❌ No'
+  });
+};
+
+// Search functionality
+  // Search functionality - Simple redirect to search page
+function clickPillSearch(term) {
+  window.location.href = "{{ url('/search') }}?q=" + encodeURIComponent(term);
+}
+
+function redirectToSearchPage() {
+  window.location.href = "{{ url('/search') }}";
+}
+
+  // Cart functionality
   function addToCart(medicineId) {
-    fetch('{{ url("/cart/add") }}', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-      },
-      body: JSON.stringify({
-        medicine_id: medicineId,
-        quantity: 1
-      })
-    })
-    .then(res => res.json())
-    .then(data => {
-      if (data.success) {
-        alert('✓ Added to cart!');
-      } else {
-        alert(data.message || 'Failed to add to cart');
-      }
-    })
-    .catch(err => {
-      console.error(err);
-      alert('Error adding to cart');
-    });
+    // This function is kept for compatibility but not used on homepage anymore
+    console.log('Redirecting to search page for medicine:', medicineId);
+    window.location.href = "{{ url('/search') }}";
   }
 
-  function triggerHomeSearch() {
-    const q = document.getElementById('home-search-input').value.trim();
-    if (q) {
-      window.location.href = "{{ url('/search') }}?q=" + encodeURIComponent(q);
-    }
-  }
-
-  // Close dropdown when clicking outside
-  document.addEventListener('click', function(e) {
-    const dropdown = document.getElementById('home-search-autocomplete');
-    const searchInput = document.getElementById('home-search-input');
-    if (dropdown && searchInput && !dropdown.contains(e.target) && e.target !== searchInput) {
-      dropdown.style.display = 'none';
-    }
-  });
-
-  // Focus on search shows dropdown if there's content
-  document.getElementById('home-search-input')?.addEventListener('focus', function() {
-    const dropdown = document.getElementById('home-search-autocomplete');
-    if (this.value.trim().length > 0 && dropdown.innerHTML !== '') {
-      dropdown.style.display = 'block';
-    }
-  });
+  // Cart functionality
 
   function filterPharmacies(type) {
     const tabs = document.querySelectorAll('.pharmacy-filter-btn');
@@ -666,6 +712,74 @@
         scrollInterval = setInterval(autoScroll, 3000);
       });
     }
+  });
+
+  // Handle cart forms on homepage with smart notifications
+  document.querySelectorAll('.cart-form').forEach(form => {
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      const btn = this.querySelector('button');
+      const originalText = btn.textContent;
+      const medicineId = this.querySelector('input[name="medicine_id"]').value;
+      
+      // Check if recently added
+      const storageKey = `cart_added_${medicineId}`;
+      const lastAdded = localStorage.getItem(storageKey);
+      const now = Date.now();
+      
+      btn.textContent = 'Adding...';
+      btn.disabled = true;
+      btn.style.background = '#9CA3AF';
+
+      fetch(this.action, {
+        method: 'POST',
+        body: new FormData(this),
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest'
+        }
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          btn.textContent = '✓ Added';
+          btn.style.background = '#10B981';
+          
+          // Update cart count in bottom navigation always
+          const cartBadge = document.querySelector('.bottom-nav-cart-badge');
+          if (cartBadge) {
+            cartBadge.textContent = data.cartCount;
+            cartBadge.style.display = data.cartCount > 0 ? 'block' : 'none';
+          }
+          
+          // Store timestamp
+          localStorage.setItem(storageKey, now.toString());
+          
+          // If recently added, just log to console
+          if (lastAdded && (now - parseInt(lastAdded)) < 5000) {
+            console.log(`Medicine ${medicineId} quantity updated in cart. Current count: ${data.cartCount}`);
+          }
+          
+          // Reset button after 1.5 seconds
+          setTimeout(() => {
+            btn.textContent = originalText;
+            btn.style.background = '#3B82F6';
+            btn.disabled = false;
+          }, 1500);
+        } else {
+          alert(data.message || 'Failed to add to cart');
+          btn.textContent = originalText;
+          btn.style.background = '#3B82F6';
+          btn.disabled = false;
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        alert('Error adding to cart');
+        btn.textContent = originalText;
+        btn.style.background = '#3B82F6';
+        btn.disabled = false;
+      });
+    });
   });
 </script>
 

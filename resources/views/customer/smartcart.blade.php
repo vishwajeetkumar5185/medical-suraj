@@ -24,7 +24,7 @@
       </div>
       @if($cartCount > 0)
       <div style="background:#fff; border-radius:10px; padding:6px 12px; display:flex; align-items:center; gap:6px;">
-        <span style="font-weight:800; font-size:14px; color:#0EA5E9;">{{ $cartCount }}</span>
+        <span class="header-cart-count" style="font-weight:800; font-size:14px; color:#0EA5E9;">{{ $cartCount }}</span>
       </div>
       @endif
     </div>
@@ -107,11 +107,18 @@
       </div>
 
     @else
-      <div style="text-align:center; padding:60px 20px;">
-        <div style="font-size:80px; margin-bottom:20px;">🛒</div>
-        <h3 style="font-size:18px; font-weight:800; color:#1A1A1A; margin-bottom:8px;">Your cart is empty</h3>
-        <p style="font-size:14px; color:#64748B; margin-bottom:20px;">Search and add medicines from home page</p>
-        <a href="{{ url('/') }}" style="display:inline-block; padding:12px 24px; background:#0EA5E9; color:#fff; text-decoration:none; border-radius:10px; font-weight:700;">Go to Home</a>
+      <div style="text-align:center; padding:80px 20px;">
+        <div style="margin-bottom:24px;">
+          <div style="width:120px; height:120px; background:linear-gradient(135deg, #F0F9FF, #E0F2FE); border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 20px; box-shadow:0 4px 20px rgba(14,165,233,0.15);">
+            <span style="font-size:60px;">🛒</span>
+          </div>
+        </div>
+        <h3 style="font-size:20px; font-weight:800; color:#1A1A1A; margin-bottom:10px;">Your cart is empty</h3>
+        <p style="font-size:15px; color:#64748B; margin-bottom:32px; line-height:1.5;">Search and add medicines from home page<br>to get started with your order</p>
+        <div style="display:flex; flex-direction:column; gap:12px; max-width:280px; margin:0 auto;">
+          <a href="{{ url('/') }}" style="display:block; padding:14px 24px; background:linear-gradient(135deg, #0EA5E9, #0284C7); color:#fff; text-decoration:none; border-radius:12px; font-weight:800; font-size:15px; box-shadow:0 4px 12px rgba(14,165,233,0.3);">🏠 Browse Medicines</a>
+          <a href="{{ url('/search') }}" style="display:block; padding:14px 24px; background:#fff; color:#0EA5E9; text-decoration:none; border-radius:12px; font-weight:800; font-size:15px; border:2px solid #0EA5E9;">🔍 Search Medicines</a>
+        </div>
       </div>
     @endif
 
@@ -137,12 +144,19 @@
 </div>
 
 <script>
-  // Handle cart form submissions
+  // Handle cart form submissions with smart notifications
   document.querySelectorAll('.cart-form').forEach(form => {
     form.addEventListener('submit', function(e) {
       e.preventDefault();
       const btn = this.querySelector('button');
       const originalText = btn.textContent;
+      const medicineId = this.querySelector('input[name="medicine_id"]').value;
+      
+      // Check if recently updated
+      const storageKey = `cart_updated_${medicineId}`;
+      const lastUpdated = localStorage.getItem(storageKey);
+      const now = Date.now();
+      
       btn.textContent = btn.textContent === 'ADD' ? 'Adding...' : '...';
       btn.disabled = true;
 
@@ -156,6 +170,17 @@
       .then(res => res.json())
       .then(data => {
         if (data.success) {
+          // Update cart count display
+          updateCartCountDisplay(data.cartCount || 0);
+          
+          // Store timestamp
+          localStorage.setItem(storageKey, now.toString());
+          
+          // If recently updated, just log to console
+          if (lastUpdated && (now - parseInt(lastUpdated)) < 3000) {
+            console.log(`Cart updated for medicine ${medicineId}. New cart total: ${data.cartCount}`);
+          }
+          
           window.location.reload();
         } else {
           alert(data.message || 'Failed to add item');
@@ -170,6 +195,26 @@
       });
     });
   });
+
+  // Function to update cart count in UI
+  function updateCartCountDisplay(count) {
+    // Update cart badge in bottom navigation
+    const cartBadge = document.querySelector('.cart-badge');
+    if (cartBadge) {
+      if (count > 0) {
+        cartBadge.textContent = count;
+        cartBadge.style.display = 'block';
+      } else {
+        cartBadge.style.display = 'none';
+      }
+    }
+    
+    // Update cart count in header
+    const headerCartCount = document.querySelector('.header-cart-count');
+    if (headerCartCount) {
+      headerCartCount.textContent = count;
+    }
+  }
 </script>
 
   <!-- Bottom Navigation -->
@@ -185,7 +230,7 @@
         <span style="font-size:22px;">🛒</span>
       </div>
       @if($cartCount > 0)
-        <span style="position:absolute; top:-4px; right:4px; background:#EF4444; color:#fff; font-size:10px; font-weight:800; padding:2px 6px; border-radius:10px; min-width:18px; text-align:center; box-shadow:0 2px 4px rgba(0,0,0,0.2);">{{ $cartCount }}</span>
+        <span class="cart-badge" style="position:absolute; top:-4px; right:4px; background:#EF4444; color:#fff; font-size:10px; font-weight:800; padding:2px 6px; border-radius:10px; min-width:18px; text-align:center; box-shadow:0 2px 4px rgba(0,0,0,0.2);">{{ $cartCount }}</span>
       @endif
       <span style="font-size:11px; font-weight:700; color:#3B82F6;">Cart</span>
     </a>
