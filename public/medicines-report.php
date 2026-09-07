@@ -8,20 +8,86 @@ $kernel->bootstrap();
 use Illuminate\Support\Facades\DB;
 
 try {
-    $medicines = DB::table('medicines')->orderBy('id', 'desc')->get();
+    // 1. Total Count (Runs directly on DB, supports 6+ Lakh medicines)
+    $totalCount = DB::table('medicines')->count();
+
+    // 2. With Photos Count
+    $withImagesCount = DB::table('medicines')
+        ->whereNotNull('image_urls')
+        ->where('image_urls', '!=', '')
+        ->where('image_urls', '!=', '[]')
+        ->where('image_urls', '!=', '""')
+        ->count();
+
+    $withoutImagesCount = max(0, $totalCount - $withImagesCount);
+
+    // 3. Category Breakdown
+    $categoriesData = DB::table('medicines')
+        ->select(DB::raw("CASE WHEN category IS NULL OR TRIM(category) = '' THEN 'Uncategorized' ELSE TRIM(category) END as cat_name"), DB::raw('COUNT(*) as total'))
+        ->groupBy('cat_name')
+        ->orderByDesc('total')
+        ->get();
+
+    $totalCategoriesCount = $categoriesData->count();
+
+    // 4. Filtering & Pagination Parameters
+    $search = trim($_GET['search'] ?? '');
+    $filterImage = $_GET['filter_image'] ?? 'all';
+    $filterCategory = $_GET['filter_category'] ?? 'all';
+    $page = max(1, (int)($_GET['page'] ?? 1));
+    $perPage = 50;
+
+    // Build Search & Filter Query
+    $query = DB::table('medicines');
+
+    if ($search !== '') {
+        $query->where(function($q) use ($search) {
+            $q->where('name', 'LIKE', "%{$search}%")
+              ->orWhere('composition', 'LIKE', "%{$search}%")
+              ->orWhere('category', 'LIKE', "%{$search}%")
+              ->orWhere('id', '=', $search);
+        });
+    }
+
+    if ($filterImage === 'with_image') {
+        $query->whereNotNull('image_urls')
+              ->where('image_urls', '!=', '')
+              ->where('image_urls', '!=', '[]')
+              ->where('image_urls', '!=', '""');
+    } elseif ($filterImage === 'no_image') {
+        $query->where(function($q) {
+            $q->whereNull('image_urls')
+              ->orWhere('image_urls', '=', '')
+              ->orWhere('image_urls', '=', '[]')
+              ->orWhere('image_urls', '=', '""');
+        });
+    }
+
+    if ($filterCategory !== 'all') {
+        if ($filterCategory === 'Uncategorized') {
+            $query->where(function($q) {
+                $q->whereNull('category')->orWhere(DB::raw("TRIM(category)"), '=', '');
+            });
+        } else {
+            $query->where('category', '=', $filterCategory);
+        }
+    }
+
+    $filteredTotal = $query->count();
+    $totalPages = max(1, (int)ceil($filteredTotal / $perPage));
+    if ($page > $totalPages && $totalPages > 0) {
+        $page = $totalPages;
+    }
+    $offset = ($page - 1) * $perPage;
+
+    $medicines = $query->orderBy('id', 'desc')->offset($offset)->limit($perPage)->get();
+
 } catch (\Exception $e) {
-    die("Database connection error: " . $e->getMessage());
+    die("Database Connection / Query Error: " . $e->getMessage());
 }
 
-$totalCount = $medicines->count();
-$withImagesCount = 0;
-$withoutImagesCount = 0;
-$categoryCounts = [];
-
 $processedMedicines = [];
-
 foreach ($medicines as $med) {
-    // Process image status
     $hasImage = false;
     $firstImageUrl = null;
     
@@ -40,23 +106,13 @@ foreach ($medicines as $med) {
                 $hasImage = true;
                 $firstImageUrl = $first;
             }
-        } elseif (!empty($raw) && $raw !== '[]') {
+        } elseif (!empty($raw) && $raw !== '[]' && $raw !== '""') {
             $hasImage = true;
             $firstImageUrl = trim($raw, '"[]');
         }
     }
-    
-    if ($hasImage) {
-        $withImagesCount++;
-    } else {
-        $withoutImagesCount++;
-    }
 
     $cat = !empty($med->category) ? trim($med->category) : 'Uncategorized';
-    if (!isset($categoryCounts[$cat])) {
-        $categoryCounts[$cat] = 0;
-    }
-    $categoryCounts[$cat]++;
 
     $processedMedicines[] = [
         'id' => $med->id,
@@ -69,8 +125,6 @@ foreach ($medicines as $med) {
         'image_url' => $firstImageUrl
     ];
 }
-
-arsort($categoryCounts);
 ?>
 <!DOCTYPE html>
 <html lang="hi">
@@ -113,6 +167,8 @@ arsort($categoryCounts);
             padding: 0.4em 0.7em;
             margin: 3px;
             border-radius: 20px;
+            cursor: pointer;
+            text-decoration: none;
         }
         .table-responsive {
             background: white;
@@ -208,7 +264,7 @@ arsort($categoryCounts);
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <h6 class="text-uppercase mb-1 opacity-75">Categories</h6>
-                        <h2 class="fw-bold mb-0"><?= count($categoryCounts) ?></h2>
+                        <h2 class="fw-bold mb-0"><?= number_format($totalCategoriesCount) ?></h2>
                         <small class="opacity-75">Active Categories</small>
                     </div>
                     <div class="stat-icon"><i class="fa-solid fa-layer-group"></i></div>
@@ -221,37 +277,50 @@ arsort($categoryCounts);
     <div class="card border-0 shadow-sm rounded-4 mb-4 p-4">
         <h5 class="fw-bold text-secondary mb-3"><i class="fa-solid fa-chart-pie me-2 text-primary"></i>Category-wise Medicine Count</h5>
         <div class="d-flex flex-wrap">
-            <?php foreach ($categoryCounts as $catName => $count): 
-                $percentage = $totalCount > 0 ? round(($count / $totalCount) * 100, 1) : 0;
+            <a href="?filter_category=all" class="badge bg-<?= $filterCategory === 'all' ? 'primary text-white' : 'light text-dark border' ?> badge-cat me-1 mb-1">
+                All Categories (<?= number_format($totalCount) ?>)
+            </a>
+            <?php foreach ($categoriesData as $catRow): 
+                $catName = $catRow->cat_name;
+                $cCount = $catRow->total;
+                $percentage = $totalCount > 0 ? round(($cCount / $totalCount) * 100, 1) : 0;
+                $isActive = ($filterCategory === $catName);
             ?>
-                <span class="badge bg-light text-dark border badge-cat d-flex align-items-center gap-2">
+                <a href="?filter_category=<?= urlencode($catName) ?>&search=<?= urlencode($search) ?>&filter_image=<?= urlencode($filterImage) ?>" 
+                   class="badge <?= $isActive ? 'bg-primary text-white' : 'bg-light text-dark border' ?> badge-cat d-flex align-items-center gap-2">
                     <span class="fw-semibold"><?= htmlspecialchars($catName) ?>:</span> 
-                    <span class="badge bg-primary rounded-pill"><?= number_format($count) ?> (<?= $percentage ?>%)</span>
-                </span>
+                    <span class="badge <?= $isActive ? 'bg-white text-primary' : 'bg-primary text-white' ?> rounded-pill"><?= number_format($cCount) ?> (<?= $percentage ?>%)</span>
+                </a>
             <?php endforeach; ?>
         </div>
     </div>
 
-    <!-- Search & Filter Controls -->
+    <!-- Search & Filter Form -->
     <div class="table-responsive">
-        <div class="row g-3 mb-3 align-items-center">
-            <div class="col-md-6">
+        <form method="GET" action="" class="row g-3 mb-3 align-items-center">
+            <?php if ($filterCategory !== 'all'): ?>
+                <input type="hidden" name="filter_category" value="<?= htmlspecialchars($filterCategory) ?>">
+            <?php endif; ?>
+            <div class="col-md-5">
                 <div class="input-group">
                     <span class="input-group-text bg-white border-end-0 rounded-start-pill text-muted"><i class="fa-solid fa-magnifying-glass"></i></span>
-                    <input type="text" id="searchInput" class="form-control search-box border-start-0" placeholder="Search by name, category, or composition...">
+                    <input type="text" name="search" value="<?= htmlspecialchars($search) ?>" class="form-control search-box border-start-0" placeholder="Search by name, category, composition or ID...">
                 </div>
             </div>
             <div class="col-md-3">
-                <select id="filterImage" class="form-select rounded-pill">
-                    <option value="all">All Image Statuses</option>
-                    <option value="with_image">With Photo Only</option>
-                    <option value="no_image">Without Photo Only</option>
+                <select name="filter_image" class="form-select rounded-pill" onchange="this.form.submit()">
+                    <option value="all" <?= $filterImage === 'all' ? 'selected' : '' ?>>All Image Statuses</option>
+                    <option value="with_image" <?= $filterImage === 'with_image' ? 'selected' : '' ?>>With Photo Only</option>
+                    <option value="no_image" <?= $filterImage === 'no_image' ? 'selected' : '' ?>>Without Photo Only</option>
                 </select>
             </div>
-            <div class="col-md-3 text-end">
-                <span class="text-muted fw-semibold" id="showingCount">Showing <?= number_format($totalCount) ?> medicines</span>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary rounded-pill w-100 fw-semibold"><i class="fa-solid fa-filter me-1"></i> Filter</button>
             </div>
-        </div>
+            <div class="col-md-2 text-end">
+                <span class="text-muted fw-semibold small">Found <?= number_format($filteredTotal) ?> results</span>
+            </div>
+        </form>
 
         <!-- Medicines List Table -->
         <table class="table table-hover align-middle mb-0" id="medicinesTable">
@@ -267,85 +336,99 @@ arsort($categoryCounts);
                 </tr>
             </thead>
             <tbody>
-                <?php foreach ($processedMedicines as $med): ?>
-                <tr class="med-row" 
-                    data-name="<?= strtolower(htmlspecialchars($med['name'] . ' ' . $med['composition'])) ?>" 
-                    data-category="<?= strtolower(htmlspecialchars($med['category'])) ?>"
-                    data-has-image="<?= $med['has_image'] ? 'true' : 'false' ?>">
-                    <td class="fw-bold text-muted">#<?= $med['id'] ?></td>
-                    <td>
-                        <?php if ($med['has_image'] && $med['image_url']): ?>
-                            <img src="<?= htmlspecialchars($med['image_url']) ?>" alt="<?= htmlspecialchars($med['name']) ?>" class="med-img-thumb" onerror="this.onerror=null; this.src='/images/no-image.png';">
-                        <?php else: ?>
-                            <div class="no-img-thumb"><i class="fa-solid fa-prescription-bottle-medical"></i></div>
-                        <?php endif; ?>
-                    </td>
-                    <td>
-                        <div class="fw-bold text-dark"><?= htmlspecialchars($med['name']) ?></div>
-                        <?php if (!empty($med['composition'])): ?>
-                            <small class="text-muted d-block"><?= htmlspecialchars($med['composition']) ?></small>
-                        <?php endif; ?>
-                    </td>
-                    <td>
-                        <span class="badge bg-secondary opacity-75"><?= htmlspecialchars($med['category']) ?></span>
-                    </td>
-                    <td class="text-muted text-decoration-line-through">₹<?= $med['mrp'] ?></td>
-                    <td class="fw-bold text-success">₹<?= $med['price'] ?></td>
-                    <td>
-                        <?php if ($med['has_image']): ?>
-                            <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill"><i class="fa-solid fa-check me-1"></i>Photo Ready</span>
-                        <?php else: ?>
-                            <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill"><i class="fa-solid fa-triangle-exclamation me-1"></i>No Photo</span>
-                        <?php endif; ?>
-                    </td>
-                </tr>
-                <?php endforeach; ?>
+                <?php if (count($processedMedicines) > 0): ?>
+                    <?php foreach ($processedMedicines as $med): ?>
+                    <tr>
+                        <td class="fw-bold text-muted">#<?= $med['id'] ?></td>
+                        <td>
+                            <?php if ($med['has_image'] && $med['image_url']): ?>
+                                <img src="<?= htmlspecialchars($med['image_url']) ?>" alt="<?= htmlspecialchars($med['name']) ?>" class="med-img-thumb" onerror="this.onerror=null; this.src='/images/no-image.png';">
+                            <?php else: ?>
+                                <div class="no-img-thumb"><i class="fa-solid fa-prescription-bottle-medical"></i></div>
+                            <?php endif; ?>
+                        </td>
+                        <td>
+                            <div class="fw-bold text-dark"><?= htmlspecialchars($med['name']) ?></div>
+                            <?php if (!empty($med['composition'])): ?>
+                                <small class="text-muted d-block"><?= htmlspecialchars($med['composition']) ?></small>
+                            <?php endif; ?>
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary opacity-75"><?= htmlspecialchars($med['category']) ?></span>
+                        </td>
+                        <td class="text-muted text-decoration-line-through">₹<?= $med['mrp'] ?></td>
+                        <td class="fw-bold text-success">₹<?= $med['price'] ?></td>
+                        <td>
+                            <?php if ($med['has_image']): ?>
+                                <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill"><i class="fa-solid fa-check me-1"></i>Photo Ready</span>
+                            <?php else: ?>
+                                <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill"><i class="fa-solid fa-triangle-exclamation me-1"></i>No Photo</span>
+                            <?php endif; ?>
+                        </td>
+                    </tr>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <tr>
+                        <td colspan="7" class="text-center py-4 text-muted">No medicines found matching your search query.</td>
+                    </tr>
+                <?php endif; ?>
             </tbody>
         </table>
+
+        <!-- Server-side Pagination -->
+        <?php if ($totalPages > 1): ?>
+        <nav class="mt-4 d-flex justify-content-between align-items-center">
+            <div class="text-muted small">
+                Showing Page <strong><?= $page ?></strong> of <strong><?= number_format($totalPages) ?></strong> (50 items per page)
+            </div>
+            <ul class="pagination pagination-sm mb-0">
+                <?php
+                $queryParams = $_GET;
+                
+                // First & Prev
+                $queryParams['page'] = 1;
+                $firstUrl = '?' . http_build_query($queryParams);
+                $queryParams['page'] = max(1, $page - 1);
+                $prevUrl = '?' . http_build_query($queryParams);
+                
+                // Next & Last
+                $queryParams['page'] = min($totalPages, $page + 1);
+                $nextUrl = '?' . http_build_query($queryParams);
+                $queryParams['page'] = $totalPages;
+                $lastUrl = '?' . http_build_query($queryParams);
+                ?>
+
+                <li class="page-item <?= $page <= 1 ? 'disabled' : '' ?>">
+                    <a class="page-item link-secondary page-link" href="<?= $firstUrl ?>">&laquo; First</a>
+                </li>
+                <li class="page-item <?= $page <= 1 ? 'disabled' : '' ?>">
+                    <a class="page-link" href="<?= $prevUrl ?>">Previous</a>
+                </li>
+
+                <!-- Dynamic Page Numbers Range -->
+                <?php
+                $startPage = max(1, $page - 2);
+                $endPage = min($totalPages, $page + 2);
+                for ($p = $startPage; $p <= $endPage; $p++):
+                    $queryParams['page'] = $p;
+                    $pUrl = '?' . http_build_query($queryParams);
+                ?>
+                    <li class="page-item <?= $p === $page ? 'active' : '' ?>">
+                        <a class="page-link" href="<?= $pUrl ?>"><?= $p ?></a>
+                    </li>
+                <?php endfor; ?>
+
+                <li class="page-item <?= $page >= $totalPages ? 'disabled' : '' ?>">
+                    <a class="page-link" href="<?= $nextUrl ?>">Next</a>
+                </li>
+                <li class="page-item <?= $page >= $totalPages ? 'disabled' : '' ?>">
+                    <a class="page-link" href="<?= $lastUrl ?>">Last &raquo;</a>
+                </li>
+            </ul>
+        </nav>
+        <?php endif; ?>
     </div>
 </div>
-
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const searchInput = document.getElementById('searchInput');
-        const filterImage = document.getElementById('filterImage');
-        const rows = document.querySelectorAll('.med-row');
-        const showingCount = document.getElementById('showingCount');
-
-        function filterTable() {
-            const query = searchInput.value.toLowerCase().trim();
-            const imageFilter = filterImage.value;
-            let visibleCount = 0;
-
-            rows.forEach(row => {
-                const name = row.getAttribute('data-name');
-                const category = row.getAttribute('data-category');
-                const hasImage = row.getAttribute('data-has-image');
-
-                const matchesQuery = name.includes(query) || category.includes(query);
-                let matchesImage = true;
-
-                if (imageFilter === 'with_image' && hasImage !== 'true') {
-                    matchesImage = false;
-                } else if (imageFilter === 'no_image' && hasImage !== 'false') {
-                    matchesImage = false;
-                }
-
-                if (matchesQuery && matchesImage) {
-                    row.style.display = '';
-                    visibleCount++;
-                } else {
-                    row.style.display = 'none';
-                }
-            });
-
-            showingCount.textContent = `Showing ${visibleCount.toLocaleString()} of <?= number_format($totalCount) ?> medicines`;
-        }
-
-        searchInput.addEventListener('input', filterTable);
-        filterImage.addEventListener('change', filterTable);
-    });
-</script>
 
 </body>
 </html>
