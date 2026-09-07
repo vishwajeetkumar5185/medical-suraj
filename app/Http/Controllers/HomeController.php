@@ -109,6 +109,7 @@ class HomeController extends Controller
     public function search(Request $request)
     {
         $rawQuery = trim(str_replace('+', ' ', $request->input('q', '')));
+        $query = $rawQuery; // Add this line to fix the compact error
         $shopId = $request->input('shop_id');
         $selectedCategories = $request->input('categories', []);
         $selectedShop = null;
