@@ -206,11 +206,27 @@
               </div>
             </div>
 
-            <!-- Financials & Charges Adjustment Form -->
-            <div style="background:#F1F5F9; border-radius:14px; padding:12px; margin-bottom:14px; border:1px solid #E2E8F0;">
-              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                <div style="font-size:11px; font-weight:800; color:#475569; text-transform:uppercase;">💵 Pricing & Charges Breakdown</div>
-                <div style="font-size:16px; font-weight:900; color:#0F172A;">Grand Total: ₹{{ number_format(($order->total_price - $order->discount_amount) + $order->delivery_charge, 2) }}</div>
+            <!-- Financials & Charges Breakdown -->
+            <div style="background:#F1F5F9; border-radius:14px; padding:14px; margin-bottom:14px; border:1px solid #E2E8F0;">
+              <div style="font-size:11px; font-weight:800; color:#475569; text-transform:uppercase; margin-bottom:8px;">💵 Pricing & Charges Breakdown</div>
+              
+              <div style="display:flex; flex-direction:column; gap:4px; margin-bottom:10px; background:#fff; padding:10px; border-radius:10px; border:1px solid #CBD5E1; font-size:12px;">
+                <div style="display:flex; justify-content:space-between; color:#475569;">
+                  <span>Items Subtotal:</span>
+                  <span style="font-weight:700;">₹{{ number_format($order->total_price, 2) }}</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; color:#059669; font-weight:700;">
+                  <span>Discount:</span>
+                  <span>-₹{{ number_format($order->discount_amount, 2) }}</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; color:#D97706; font-weight:700;">
+                  <span>Delivery Charges:</span>
+                  <span>+₹{{ number_format($order->delivery_charge, 2) }}</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; font-weight:900; font-size:14px; color:#0F172A; border-top:1px solid #E2E8F0; padding-top:6px; margin-top:2px;">
+                  <span>Final Amount (Grand Total):</span>
+                  <span style="color:#1D4ED8;">₹{{ number_format(($order->total_price - $order->discount_amount) + $order->delivery_charge, 2) }}</span>
+                </div>
               </div>
 
               <!-- Inline Admin Adjust Form -->
