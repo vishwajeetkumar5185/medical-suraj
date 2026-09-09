@@ -96,38 +96,7 @@
       @endif
     </div>
 
-    <!-- Delivery Route Map Card -->
-    @php
-      $uLat = session('user_lat');
-      $uLng = session('user_lng');
-      $shopLat = (float)($order->shop->latitude ?? 26.9124);
-      $shopLng = (float)($order->shop->longitude ?? 75.7873);
-      
-      $realDist = (float)($order->shop->distance_km ?? 1.2);
-      if ($uLat && $uLng && $shopLat && $shopLng) {
-          $theta = $uLng - $shopLng;
-          $dist = sin(deg2rad($uLat)) * sin(deg2rad($shopLat)) +  cos(deg2rad($uLat)) * cos(deg2rad($shopLat)) * cos(deg2rad($theta));
-          $dist = acos($dist);
-          $dist = rad2deg($dist);
-          $miles = $dist * 60 * 1.1515;
-          $realDist = round($miles * 1.609344, 1);
-      }
-    @endphp
-    
-    <div style="background:#fff; border-radius:16px; padding:20px; margin-bottom:16px; box-shadow:0 2px 8px rgba(0,0,0,0.06);">
-      <h3 style="font-size:16px; font-weight:800; color:#1A1A1A; margin:0 0 12px 0;">🗺️ Delivery Route</h3>
-      
-      <div id="delivery-route-map" style="width:100%; height:200px; border-radius:12px; border:2px solid #E5E7EB; margin-bottom:12px;"></div>
-      
-      <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; font-weight:700;">
-        <div style="color:#64748B;">
-          📍 Distance: <span style="color:#10B981;">{{ $realDist }} KM</span>
-        </div>
-        <div style="color:#64748B;">
-          🏪 {{ $order->shop->name }}
-        </div>
-      </div>
-    </div>
+
 
     <!-- Order Items Card -->
     <div style="background:#fff; border-radius:16px; padding:20px; margin-bottom:16px; box-shadow:0 2px 8px rgba(0,0,0,0.06);">
@@ -188,45 +157,6 @@
 </div>
 
 <script>
-  window.addEventListener('DOMContentLoaded', () => {
-    const shopLat = parseFloat("{{ $shopLat }}");
-    const shopLng = parseFloat("{{ $shopLng }}");
-    const custLat = parseFloat("{{ $uLat }}") || (shopLat - 0.008);
-    const custLng = parseFloat("{{ $uLng }}") || (shopLng + 0.006);
-
-    const routeMap = L.map('delivery-route-map', { zoomControl: false }).setView([shopLat, shopLng], 14);
-
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-      attribution: '© OpenStreetMap'
-    }).addTo(routeMap);
-
-    const shopIcon = L.divIcon({
-      html: '🏪',
-      className: 'custom-div-icon',
-      iconSize: [24, 24],
-      iconAnchor: [12, 12]
-    });
-    
-    const customerIcon = L.divIcon({
-      html: '🏠',
-      className: 'custom-div-icon',
-      iconSize: [24, 24],
-      iconAnchor: [12, 12]
-    });
-
-    const shopMarker = L.marker([shopLat, shopLng], { icon: shopIcon }).addTo(routeMap).bindPopup("Pharmacy Store");
-    const customerMarker = L.marker([custLat, custLng], { icon: customerIcon }).addTo(routeMap).bindPopup("Your Location");
-
-    L.polyline([[shopLat, shopLng], [custLat, custLng]], { 
-      color: '#0EA5E9', 
-      weight: 4, 
-      dashArray: '8, 8' 
-    }).addTo(routeMap);
-
-    const group = new L.featureGroup([shopMarker, customerMarker]);
-    routeMap.fitBounds(group.getBounds().pad(0.2));
-  });
 
   const orderId = "{{ $order->id }}";
   let currentStatus = "{{ $order->status }}";
