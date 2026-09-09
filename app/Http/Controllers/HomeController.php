@@ -296,10 +296,25 @@ class HomeController extends Controller
         }
         
         $cleanQ = addslashes($q);
-        $meds = \App\Models\Medicine::where('name', 'like', '%' . $q . '%')
-            ->orderByRaw("CASE WHEN name LIKE '{$cleanQ}%' THEN 0 WHEN name LIKE '% {$cleanQ}%' THEN 1 ELSE 2 END ASC")
+        $words = array_filter(explode(' ', $q));
+        
+        $meds = \App\Models\Medicine::query()
+            ->where(function($query) use ($words) {
+                foreach ($words as $word) {
+                    $query->where(function($subQ) use ($word) {
+                        $subQ->where('name', 'like', '%' . $word . '%')
+                             ->orWhere('composition', 'like', '%' . $word . '%')
+                             ->orWhere('category', 'like', '%' . $word . '%');
+                    });
+                }
+            })
+            ->orderByRaw("CASE 
+                WHEN name LIKE '{$cleanQ}%' THEN 0 
+                WHEN name LIKE '% {$cleanQ}%' THEN 1 
+                ELSE 2 
+            END ASC")
             ->orderBy('name', 'asc')
-            ->limit(20)
+            ->limit(12)
             ->get();
         
         return response()->json($meds);

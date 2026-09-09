@@ -107,17 +107,25 @@
       </h2>
     </div>
 
-    <!-- Search Box - Clickable Redirect to Search Page -->
-    <div style="margin-bottom:14px;">
-      <div 
-        onclick="redirectToSearchPage()" 
-        style="background:#fff; border-radius:12px; padding:12px 16px; display:flex; align-items:center; gap:10px; box-shadow:0 2px 8px rgba(0,0,0,0.08); cursor:pointer; transition:all 0.2s ease;"
-        onmouseover="this.style.transform='scale(1.02)'; this.style.boxShadow='0 4px 16px rgba(0,0,0,0.12)';"
-        onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.08)';"
-      >
-        <span style="font-size:20px; color:#3B82F6;">🔍</span>
-        <span style="flex:1; font-size:14px; color:#94A3B8; font-weight:500;">Medicine ya lab test search karein...</span>
-        <span style="font-size:16px; color:#3B82F6;">›</span>
+    <!-- Real-time Live Search Input -->
+    <div style="margin-bottom:14px; position:relative;" id="home-search-wrapper">
+      <form action="{{ url('/search') }}" method="GET" style="margin:0;">
+        <div style="background:#fff; border-radius:12px; padding:8px 12px; display:flex; align-items:center; gap:8px; box-shadow:0 2px 8px rgba(0,0,0,0.08); border:1px solid rgba(255,255,255,0.4);">
+          <span style="font-size:18px; color:#0EA5E9;">🔍</span>
+          <input 
+            type="text" 
+            id="home-search-input" 
+            name="q"
+            placeholder="Medicine ya lab test search karein..." 
+            autocomplete="off"
+            style="flex:1; border:none; outline:none; font-size:14px; color:#1A1A1A; font-weight:500; background:transparent; padding:6px 0;"
+          >
+          <button type="submit" style="background:#0EA5E9; color:#fff; border:none; border-radius:8px; padding:8px 14px; font-size:13px; font-weight:700; cursor:pointer; flex-shrink:0;">Search</button>
+        </div>
+      </form>
+
+      <!-- Instant Live Suggestions Dropdown Container -->
+      <div id="home-search-suggestions" style="display:none; position:absolute; top:calc(100% + 6px); left:0; right:0; background:#fff; border-radius:14px; box-shadow:0 10px 30px rgba(0,0,0,0.18); z-index:9999; max-height:380px; overflow-y:auto; border:1px solid #E2E8F0; padding:6px 0;">
       </div>
     </div>
 
@@ -781,5 +789,106 @@ function redirectToSearchPage() {
       });
     });
   });
+
+  // Live Instant Medicine Search Autocomplete
+  (function() {
+    const searchInput = document.getElementById('home-search-input');
+    const suggestionsBox = document.getElementById('home-search-suggestions');
+    const searchWrapper = document.getElementById('home-search-wrapper');
+    let debounceTimer = null;
+
+    if (!searchInput || !suggestionsBox) return;
+
+    searchInput.addEventListener('input', function() {
+      const query = this.value.trim();
+      clearTimeout(debounceTimer);
+
+      if (query.length < 1) {
+        suggestionsBox.style.display = 'none';
+        suggestionsBox.innerHTML = '';
+        return;
+      }
+
+      debounceTimer = setTimeout(() => {
+        fetch("{{ url('/medicines/search') }}?q=" + encodeURIComponent(query))
+          .then(res => res.json())
+          .then(data => {
+            if (!data || data.length === 0) {
+              suggestionsBox.innerHTML = `
+                <div style="padding:14px 16px; text-align:center; color:#64748B; font-size:13px;">
+                  <span>🔍</span> Koi medicine nahi mili "<strong>${escapeHtml(query)}</strong>" ke naam se.
+                </div>`;
+            } else {
+              let html = '';
+              data.forEach(med => {
+                let imgHtml = '<div style="width:38px; height:38px; background:#F1F5F9; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0;">💊</div>';
+                if (med.images && med.images.length > 0) {
+                  const firstImg = med.images[0];
+                  const imgUrl = (firstImg.startsWith('http://') || firstImg.startsWith('https://')) ? firstImg : '{{ asset("") }}' + firstImg;
+                  imgHtml = `<img src="${imgUrl}" style="width:38px; height:38px; object-fit:contain; border-radius:8px; border:1px solid #E2E8F0; flex-shrink:0;" onerror="this.onerror=null; this.outerHTML='<div style=\\'width:38px; height:38px; background:#F1F5F9; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0;\\'>💊</div>';">`;
+                }
+
+                const price = parseFloat(med.price || 0).toFixed(2);
+                const mrp = parseFloat(med.mrp || 0).toFixed(2);
+                const category = med.category || 'General';
+
+                html += `
+                  <a href="{{ url('/medicine') }}/${med.id}" style="text-decoration:none; color:inherit; display:flex; align-items:center; gap:12px; padding:10px 14px; border-bottom:1px solid #F1F5F9; transition:background 0.15s ease;" onmouseover="this.style.background='#F8FAFC'" onmouseout="this.style.background='#FFFFFF'">
+                    ${imgHtml}
+                    <div style="flex:1; min-width:0;">
+                      <div style="font-size:14px; font-weight:700; color:#1E293B; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                        ${highlightMatch(med.name, query)}
+                      </div>
+                      <div style="font-size:11px; color:#64748B; margin-top:1px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                        ${med.composition ? escapeHtml(med.composition) + ' • ' : ''}<span style="color:#0EA5E9; font-weight:600;">${escapeHtml(category)}</span>
+                      </div>
+                    </div>
+                    <div style="text-align:right; flex-shrink:0;">
+                      <div style="font-size:13px; font-weight:800; color:#0EA5E9;">₹${price}</div>
+                      ${parseFloat(mrp) > parseFloat(price) ? `<div style="font-size:10px; color:#94A3B8; text-decoration:line-through;">₹${mrp}</div>` : ''}
+                    </div>
+                  </a>`;
+              });
+
+              html += `
+                <a href="{{ url('/search') }}?q=${encodeURIComponent(query)}" style="display:block; text-align:center; padding:10px 14px; background:#F0F9FF; color:#0EA5E9; font-size:13px; font-weight:700; text-decoration:none; border-radius:0 0 14px 14px;">
+                  Sabhi "${escapeHtml(query)}" results dekhein →
+                </a>`;
+
+              suggestionsBox.innerHTML = html;
+            }
+            suggestionsBox.style.display = 'block';
+          })
+          .catch(err => {
+            console.error(err);
+          });
+      }, 200);
+    });
+
+    // Close suggestions on outside click
+    document.addEventListener('click', function(e) {
+      if (searchWrapper && !searchWrapper.contains(e.target)) {
+        suggestionsBox.style.display = 'none';
+      }
+    });
+
+    searchInput.addEventListener('focus', function() {
+      if (this.value.trim().length >= 1 && suggestionsBox.children.length > 0) {
+        suggestionsBox.style.display = 'block';
+      }
+    });
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function highlightMatch(text, q) {
+      if (!text || !q) return escapeHtml(text);
+      const escaped = escapeHtml(text);
+      const regex = new RegExp('(' + q.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&') + ')', 'gi');
+      return escaped.replace(regex, '<mark style="background:#FEF08A; color:#000; padding:0 2px; border-radius:3px;">$1</mark>');
+    }
+  })();
 </script>
 
