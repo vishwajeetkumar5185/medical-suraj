@@ -71,8 +71,39 @@
               </span>
             </div>
             
-            <div style="font-size:13px; color:#444; margin-bottom:12px; line-height:1.4;">
+            <div style="font-size:13px; color:#444; margin-bottom:8px; line-height:1.4;">
               <strong>Dawaiyaan:</strong> {{ $medListStr }}
+            </div>
+
+            <!-- Customer & Location Info -->
+            <div style="background:#F8FAFC; border-radius:10px; padding:10px; margin-bottom:10px; border:1px solid #E2E8F0; font-size:12px;">
+              <div style="font-weight:800; color:#1E293B;">👤 {{ $o->user ? $o->user->name : 'Customer' }}</div>
+              @if($o->user && $o->user->phone)
+                <div style="margin-top:2px;">
+                  <a href="tel:{{ $o->user->phone }}" style="font-weight:700; color:#2563EB; text-decoration:none;">
+                    📞 {{ $o->user->phone }}
+                  </a>
+                </div>
+              @endif
+              @if($o->mode === 'delivery' && $o->delivery_address)
+                <div style="color:#475569; margin-top:4px; line-height:1.3;">
+                  📍 {{ $o->delivery_address }}
+                </div>
+                <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:6px;">
+                  @if(!empty($o->latitude) && !empty($o->longitude))
+                    <a href="https://www.google.com/maps?q={{ $o->latitude }},{{ $o->longitude }}" target="_blank" style="display:inline-flex; align-items:center; gap:4px; background:#10B981; color:#fff; padding:4px 8px; border-radius:6px; font-size:10.5px; font-weight:800; text-decoration:none;">
+                      📍 Exact GPS (Google Maps)
+                    </a>
+                  @endif
+                  @php
+                    $encodedAddress = urlencode($o->delivery_address);
+                    $mapSearchUrl = "https://www.google.com/maps/search/?api=1&query={$encodedAddress}";
+                  @endphp
+                  <a href="{{ $mapSearchUrl }}" target="_blank" style="display:inline-flex; align-items:center; gap:4px; background:#2563EB; color:#fff; padding:4px 8px; border-radius:6px; font-size:10.5px; font-weight:800; text-decoration:none;">
+                    🗺️ Open Maps
+                  </a>
+                </div>
+              @endif
             </div>
             
             <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; color:#888; border-top:1px solid #F3F4F6; padding-top:10px; margin-top:8px;">

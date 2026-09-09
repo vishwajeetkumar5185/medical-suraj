@@ -105,6 +105,10 @@ class OrderController extends Controller
 
         $discountAmount = min($totalPrice, $autoFlatDiscount + $couponDiscount);
 
+        Order::checkTable();
+        $latitude = $request->input('latitude') ? (float)$request->input('latitude') : (session('user_lat') ? (float)session('user_lat') : null);
+        $longitude = $request->input('longitude') ? (float)$request->input('longitude') : (session('user_lng') ? (float)session('user_lng') : null);
+
         $order = Order::create([
             'shop_id' => $shop->id,
             'status' => 'Pending',
@@ -113,6 +117,8 @@ class OrderController extends Controller
             'delivery_charge' => $deliveryCharge,
             'discount_amount' => $discountAmount,
             'delivery_address' => $deliveryAddress,
+            'latitude' => $latitude,
+            'longitude' => $longitude,
             'items' => $items,
             'user_id' => Auth::id()
         ]);

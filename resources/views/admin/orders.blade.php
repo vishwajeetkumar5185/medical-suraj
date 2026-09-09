@@ -145,13 +145,20 @@
                 <div style="font-size:12px; color:#334155; margin-top:6px; line-height:1.4;">
                   📍 <strong>Delivery Address:</strong> {{ $order->delivery_address }}
                 </div>
-                @php
-                  $encodedAddress = urlencode($order->delivery_address);
-                  $mapUrl = "https://www.google.com/maps/search/?api=1&query={$encodedAddress}";
-                @endphp
-                <div style="margin-top:8px;">
-                  <a href="{{ $mapUrl }}" target="_blank" style="display:inline-flex; align-items:center; gap:6px; background:#10B981; color:#fff; padding:6px 12px; border-radius:8px; font-size:11px; font-weight:800; text-decoration:none;">
-                    🗺️ Open Location in Google Maps
+                
+                <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;">
+                  @if(!empty($order->latitude) && !empty($order->longitude))
+                    <a href="https://www.google.com/maps?q={{ $order->latitude }},{{ $order->longitude }}" target="_blank" style="display:inline-flex; align-items:center; gap:6px; background:#10B981; color:#fff; padding:6px 12px; border-radius:8px; font-size:11.5px; font-weight:800; text-decoration:none; box-shadow:0 2px 6px rgba(16,185,129,0.3);">
+                      📍 Exact GPS Location (Google Maps)
+                    </a>
+                  @endif
+
+                  @php
+                    $encodedAddress = urlencode($order->delivery_address);
+                    $mapSearchUrl = "https://www.google.com/maps/search/?api=1&query={$encodedAddress}";
+                  @endphp
+                  <a href="{{ $mapSearchUrl }}" target="_blank" style="display:inline-flex; align-items:center; gap:6px; background:#2563EB; color:#fff; padding:6px 12px; border-radius:8px; font-size:11.5px; font-weight:800; text-decoration:none; box-shadow:0 2px 6px rgba(37,99,235,0.3);">
+                    🗺️ Open Address in Google Maps
                   </a>
                 </div>
               @endif

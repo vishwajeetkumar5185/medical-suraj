@@ -58,8 +58,10 @@
 
     <div style="padding:16px;">
       
-      <!-- Hidden input for delivery mode (always delivery) -->
+      <!-- Hidden input for delivery mode & location coordinates -->
       <input type="hidden" name="mode" value="delivery">
+      <input type="hidden" name="latitude" id="checkout-lat" value="{{ session('user_lat') }}">
+      <input type="hidden" name="longitude" id="checkout-lng" value="{{ session('user_lng') }}">
 
       <!-- Delivery Address Card -->
       <div id="delivery-address-section" style="background:#fff; border-radius:16px; padding:20px; margin-bottom:16px; box-shadow:0 2px 8px rgba(0,0,0,0.06);">
@@ -295,9 +297,19 @@
       }
     })
     .catch(err => {
-      console.error(err);
-      window.location.reload();
     });
+  }
+
+  // Auto-detect GPS coordinates if missing
+  if (navigator.geolocation) {
+    const latInput = document.getElementById('checkout-lat');
+    const lngInput = document.getElementById('checkout-lng');
+    if (latInput && !latInput.value) {
+      navigator.geolocation.getCurrentPosition(pos => {
+        latInput.value = pos.coords.latitude;
+        lngInput.value = pos.coords.longitude;
+      }, err => console.log('Geolocation prompt ignored'), { timeout: 8000 });
+    }
   }
 </script>
 
