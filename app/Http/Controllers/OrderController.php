@@ -82,11 +82,28 @@ class OrderController extends Controller
                              . $request->address_pincode;
         }
 
-        $discountAmount = 0;
+        // Global Automatic Flat Discount Settings from Admin
+        $flatDiscountActive = Setting::getVal('flat_discount_active', 'false') === 'true';
+        $flatDiscountType = Setting::getVal('flat_discount_type', 'flat');
+        $flatDiscountValue = (float) Setting::getVal('flat_discount_value', '0');
+        $flatDiscountMinOrder = (float) Setting::getVal('flat_discount_min_order', '0');
+
+        $autoFlatDiscount = 0;
+        if ($flatDiscountActive && $flatDiscountValue > 0 && $totalPrice >= $flatDiscountMinOrder) {
+            if ($flatDiscountType === 'flat') {
+                $autoFlatDiscount = $flatDiscountValue;
+            } else {
+                $autoFlatDiscount = round(($totalPrice * $flatDiscountValue) / 100, 2);
+            }
+        }
+
+        $couponDiscount = 0;
         $appliedCoupon = session('applied_coupon');
         if ($appliedCoupon && isset($appliedCoupon['discount'])) {
-            $discountAmount = (float)$appliedCoupon['discount'];
+            $couponDiscount = (float)$appliedCoupon['discount'];
         }
+
+        $discountAmount = min($totalPrice, $autoFlatDiscount + $couponDiscount);
 
         $order = Order::create([
             'shop_id' => $shop->id,

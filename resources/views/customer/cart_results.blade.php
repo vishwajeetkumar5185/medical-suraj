@@ -227,10 +227,17 @@
           </span>
         </div>
 
-        @if($discountAmount > 0)
-          <div style="display:flex; justify-content:space-between; margin-bottom:10px; font-size:14px; color:#10B981; font-weight:800;" id="summary-discount-row">
-            <span>Coupon Discount:</span>
-            <span>-₹{{ number_format($discountAmount, 2) }}</span>
+        @if(($autoFlatDiscount ?? 0) > 0)
+          <div style="display:flex; justify-content:space-between; margin-bottom:10px; font-size:14px; color:#D97706; font-weight:800;" id="summary-flat-discount-row">
+            <span>⚡ Flat Automatic Discount:</span>
+            <span>-₹{{ number_format($autoFlatDiscount, 2) }}</span>
+          </div>
+        @endif
+
+        @if(($couponDiscount ?? 0) > 0)
+          <div style="display:flex; justify-content:space-between; margin-bottom:10px; font-size:14px; color:#10B981; font-weight:800;" id="summary-coupon-discount-row">
+            <span>🎟️ Promo Coupon Discount:</span>
+            <span>-₹{{ number_format($couponDiscount, 2) }}</span>
           </div>
         @endif
         

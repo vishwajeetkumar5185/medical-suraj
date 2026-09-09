@@ -452,7 +452,15 @@ class AdminController extends Controller
         $minDeliveryOrder = (float) Setting::getVal('min_delivery_order', '150');
         $freeDeliveryMin = (float) Setting::getVal('free_delivery_min', '500');
 
-        return view('admin.coupons', compact('coupons', 'pendingApprovalsCount', 'deliveryCharge', 'minDeliveryOrder', 'freeDeliveryMin'));
+        $flatDiscountActive = Setting::getVal('flat_discount_active', 'false') === 'true';
+        $flatDiscountType = Setting::getVal('flat_discount_type', 'flat');
+        $flatDiscountValue = (float) Setting::getVal('flat_discount_value', '0');
+        $flatDiscountMinOrder = (float) Setting::getVal('flat_discount_min_order', '0');
+
+        return view('admin.coupons', compact(
+            'coupons', 'pendingApprovalsCount', 'deliveryCharge', 'minDeliveryOrder', 'freeDeliveryMin',
+            'flatDiscountActive', 'flatDiscountType', 'flatDiscountValue', 'flatDiscountMinOrder'
+        ));
     }
 
     public function updateDeliverySettings(Request $request)
@@ -468,6 +476,23 @@ class AdminController extends Controller
         Setting::setVal('free_delivery_min', (string)($request->free_delivery_min ?? 0));
 
         return redirect()->back()->with('success', 'Global Delivery Charges & Minimum Order Rules saved successfully!');
+    }
+
+    public function updateFlatDiscountSettings(Request $request)
+    {
+        $request->validate([
+            'flat_discount_active' => 'required|string',
+            'flat_discount_type' => 'required|in:flat,percent',
+            'flat_discount_value' => 'required|numeric|min:0',
+            'flat_discount_min_order' => 'nullable|numeric|min:0',
+        ]);
+
+        Setting::setVal('flat_discount_active', $request->flat_discount_active === 'true' ? 'true' : 'false');
+        Setting::setVal('flat_discount_type', $request->flat_discount_type);
+        Setting::setVal('flat_discount_value', (string)$request->flat_discount_value);
+        Setting::setVal('flat_discount_min_order', (string)($request->flat_discount_min_order ?? 0));
+
+        return redirect()->back()->with('success', 'Global Flat Discount System settings saved successfully!');
     }
 
     public function couponsAdd(Request $request)

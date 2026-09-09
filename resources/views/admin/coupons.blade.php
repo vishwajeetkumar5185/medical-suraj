@@ -78,6 +78,49 @@
       </form>
     </div>
 
+    <!-- Global Automatic Flat Discount System Card -->
+    <div style="background:#fff; border-radius:20px; padding:20px; box-shadow:0 4px 20px rgba(0,0,0,0.06); border:2px solid #F59E0B; margin-bottom:20px; background:linear-gradient(180deg,#FFFBEB,#fff);">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; flex-wrap:wrap; gap:8px;">
+        <h3 style="font-weight:900; font-size:15px; color:#B45309; margin:0;">⚡ Global Automatic Flat Discount System</h3>
+        <span style="background:{{ $flatDiscountActive ? '#DCFCE7' : '#FEE2E2' }}; color:{{ $flatDiscountActive ? '#166534' : '#DC2626' }}; padding:4px 12px; border-radius:20px; font-weight:900; font-size:11px; border:1px solid {{ $flatDiscountActive ? '#86EFAC' : '#FCA5A5' }};">
+          {{ $flatDiscountActive ? '🟢 ACTIVE (Applying on all orders)' : '🔴 INACTIVE (Disabled)' }}
+        </span>
+      </div>
+      <p style="font-size:12px; color:#6B7280; margin-bottom:14px;">Automatically apply a flat discount on all customer orders without needing a promo coupon code. Enable/Disable anytime!</p>
+
+      <form action="{{ url('/admin/settings/flat-discount') }}" method="POST">
+        @csrf
+        <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:14px;">
+          <div style="flex:1; min-width:140px;">
+            <label class="form-label" style="font-weight:800; font-size:11.5px; color:#B45309;">System Status *</label>
+            <select name="flat_discount_active" class="form-input" style="padding:10px; font-size:13px; font-weight:800; color:{{ $flatDiscountActive ? '#15803D' : '#B91C1C' }}; border-color:#F59E0B;">
+              <option value="true" {{ $flatDiscountActive ? 'selected' : '' }}>🟢 Active (Apply Flat Discount)</option>
+              <option value="false" {{ !$flatDiscountActive ? 'selected' : '' }}>🔴 Inactive (Disable Flat Discount)</option>
+            </select>
+          </div>
+          <div style="flex:1; min-width:140px;">
+            <label class="form-label" style="font-weight:800; font-size:11.5px; color:#1E40AF;">Discount Type *</label>
+            <select name="flat_discount_type" class="form-input" style="padding:10px; font-size:13px; font-weight:700;">
+              <option value="flat" {{ $flatDiscountType === 'flat' ? 'selected' : '' }}>Flat ₹ Amount Off</option>
+              <option value="percent" {{ $flatDiscountType === 'percent' ? 'selected' : '' }}>Percentage % Off</option>
+            </select>
+          </div>
+          <div style="flex:1; min-width:140px;">
+            <label class="form-label" style="font-weight:800; font-size:11.5px; color:#B45309;">Discount Value (₹ or %) *</label>
+            <input type="number" step="0.01" name="flat_discount_value" value="{{ $flatDiscountValue ?? 0 }}" required class="form-input" style="padding:10px; font-size:13px; font-weight:800;" placeholder="e.g. 50">
+          </div>
+          <div style="flex:1; min-width:140px;">
+            <label class="form-label" style="font-weight:800; font-size:11.5px; color:#047857;">Min Order Bill Amount (₹)</label>
+            <input type="number" step="0.01" name="flat_discount_min_order" value="{{ $flatDiscountMinOrder ?? 0 }}" class="form-input" style="padding:10px; font-size:13px; font-weight:800;" placeholder="e.g. 0 (all bills)">
+          </div>
+        </div>
+
+        <button type="submit" style="width:100%; padding:12px; background:linear-gradient(135deg,#D97706,#B45309); color:#fff; border:none; border-radius:12px; font-weight:900; font-size:13.5px; cursor:pointer;">
+          ⚡ Save & Update Flat Discount System
+        </button>
+      </form>
+    </div>
+
     <!-- Add New Coupon Card -->
     <div style="background:#fff; border-radius:20px; padding:20px; box-shadow:0 4px 20px rgba(0,0,0,0.06); border:1px solid #E5E7EB; margin-bottom:20px;">
       <h3 style="font-weight:900; font-size:15px; color:#1E3A8A; margin-bottom:14px;">➕ Create New Coupon Code</h3>

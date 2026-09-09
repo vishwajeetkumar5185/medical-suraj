@@ -128,6 +128,7 @@ Route::middleware(['auth', 'role.admin'])->group(function () {
     Route::post('/admin/coupons/add', [AdminController::class, 'couponsAdd']);
     Route::delete('/admin/coupons/delete/{id}', [AdminController::class, 'couponsDelete']);
     Route::post('/admin/settings/delivery', [AdminController::class, 'updateDeliverySettings']);
+    Route::post('/admin/settings/flat-discount', [AdminController::class, 'updateFlatDiscountSettings']);
     Route::get('/admin/commission', [AdminController::class, 'commission']);
     Route::post('/admin/commission', [AdminController::class, 'commissionUpdate']);
 });
