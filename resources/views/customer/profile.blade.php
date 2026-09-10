@@ -33,6 +33,34 @@
 
   <div style="padding:16px;">
     
+    @if(Auth::check() && Auth::user()->role === 'admin')
+      <div style="background:linear-gradient(135deg, #1E293B 0%, #0F172A 100%); border-radius:16px; padding:20px; color:#fff; box-shadow:0 4px 12px rgba(0,0,0,0.15); margin-bottom:16px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
+          <div>
+            <div style="font-size:18px; font-weight:800; display:flex; align-items:center; gap:8px;">
+              🛡️ Admin Operations Panel
+            </div>
+            <div style="font-size:12px; color:#94A3B8; margin-top:2px;">Manage all customer orders, pharmacy stores & settings</div>
+          </div>
+          <a href="{{ url('/admin') }}" style="background:#0EA5E9; color:#fff; padding:8px 16px; border-radius:10px; text-decoration:none; font-size:13px; font-weight:800;">
+            Main Dashboard →
+          </a>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:14px;">
+          <a href="{{ url('/admin/orders') }}" style="background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.15); border-radius:12px; padding:14px; text-decoration:none; color:#fff; text-align:center;">
+            <div style="font-size:24px; margin-bottom:4px;">📦</div>
+            <div style="font-size:14px; font-weight:800;">Customer Orders</div>
+            <div style="font-size:11px; color:#38BDF8; font-weight:600; margin-top:2px;">Sabhi Orders Dekhein</div>
+          </a>
+          <a href="{{ url('/admin/stores') }}" style="background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.15); border-radius:12px; padding:14px; text-decoration:none; color:#fff; text-align:center;">
+            <div style="font-size:24px; margin-bottom:4px;">🏪</div>
+            <div style="font-size:14px; font-weight:800;">Manage Stores</div>
+            <div style="font-size:11px; color:#38BDF8; font-weight:600; margin-top:2px;">Store Approvals</div>
+          </a>
+        </div>
+      </div>
+    @endif
+    
     @if($registeredShop)
       <div style="background:#fff; border-radius:16px; padding:16px; box-shadow:0 2px 8px rgba(0,0,0,0.06); margin-bottom:16px;">
         <div style="display:flex; gap:12px; align-items:center;">
