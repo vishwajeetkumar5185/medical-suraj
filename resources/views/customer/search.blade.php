@@ -47,8 +47,8 @@
     </div>
   </div>
 
-  <!-- Medicine Results -->
-  <div style="padding:16px;">
+  <!-- Medicine Results Container -->
+  <div style="padding:16px;" id="search-results-container">
     
     @if($medicines->count() > 0)
       <div style="margin-bottom:16px;">
@@ -144,61 +144,100 @@
 </div>
 
 <script>
-  // Handle cart form submissions
-  document.querySelectorAll('.cart-form').forEach(form => {
-    form.addEventListener('submit', function(e) {
-      e.preventDefault();
-      const btn = this.querySelector('button');
-      const originalText = btn.textContent;
-      btn.textContent = btn.textContent === 'ADD' ? 'Adding...' : '...';
-      btn.disabled = true;
+  function bindCartForms() {
+    document.querySelectorAll('.cart-form').forEach(form => {
+      if (form.dataset.bound) return;
+      form.dataset.bound = 'true';
+      form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const btn = this.querySelector('button');
+        const originalText = btn.textContent;
+        btn.textContent = btn.textContent === 'ADD' ? 'Adding...' : '...';
+        btn.disabled = true;
 
-      fetch(this.action, {
-        method: 'POST',
-        body: new FormData(this),
+        fetch(this.action, {
+          method: 'POST',
+          body: new FormData(this),
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+          }
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            window.location.reload();
+          } else {
+            alert(data.message || 'Failed to add item');
+            btn.textContent = originalText;
+            btn.disabled = false;
+          }
+        })
+        .catch(err => {
+          console.error(err);
+          btn.textContent = originalText;
+          btn.disabled = false;
+        });
+      });
+    });
+  }
+
+  // Smooth Live Search without Page Reload on Search Page
+  document.addEventListener('DOMContentLoaded', function() {
+    bindCartForms();
+
+    const searchInput = document.getElementById('page-search-input');
+    const searchForm = document.getElementById('page-search-form') || (searchInput ? searchInput.closest('form') : null);
+    const resultsContainer = document.getElementById('search-results-container');
+    let debounceTimer = null;
+
+    if (!searchInput) return;
+
+    // Auto-focus input on page load with cursor at end
+    const val = searchInput.value;
+    searchInput.focus();
+    if (typeof searchInput.setSelectionRange === 'function') {
+      searchInput.setSelectionRange(val.length, val.length);
+    }
+
+    function performLiveSearch(query) {
+      const url = "{{ url('/search') }}?q=" + encodeURIComponent(query);
+      
+      // Update browser URL silently without page reload
+      if (window.history && window.history.replaceState) {
+        window.history.replaceState(null, '', url);
+      }
+
+      fetch(url, {
         headers: {
           'X-Requested-With': 'XMLHttpRequest'
         }
       })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) {
-          window.location.reload();
-        } else {
-          alert(data.message || 'Failed to add item');
-          btn.textContent = originalText;
-          btn.disabled = false;
+      .then(res => res.text())
+      .then(html => {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        const newResults = doc.getElementById('search-results-container');
+        if (newResults && resultsContainer) {
+          resultsContainer.innerHTML = newResults.innerHTML;
+          bindCartForms();
         }
       })
-      .catch(err => {
-        console.error(err);
-        btn.textContent = originalText;
-        btn.disabled = false;
-      });
+      .catch(err => console.error('Live search error:', err));
+    }
+
+    searchInput.addEventListener('input', function() {
+      clearTimeout(debounceTimer);
+      const query = this.value; // Preserve exact spaces and characters
+      debounceTimer = setTimeout(() => {
+        performLiveSearch(query);
+      }, 250);
     });
-  });
 
-  // Search input handling on dedicated search page (No suggestion popup overlay)
-  document.addEventListener('DOMContentLoaded', function() {
-    const searchInput = document.getElementById('page-search-input');
-    const searchForm = document.getElementById('page-search-form') || (searchInput ? searchInput.closest('form') : null);
-    let debounceTimer = null;
-
-    if (searchInput) {
-      // Auto-focus input with cursor at end
-      const val = searchInput.value;
-      searchInput.focus();
-      searchInput.value = '';
-      searchInput.value = val;
-
-      // Update page search results on typing with slight delay (no floating dropdown)
-      searchInput.addEventListener('input', function() {
+    if (searchForm) {
+      searchForm.addEventListener('submit', function(e) {
+        e.preventDefault();
         clearTimeout(debounceTimer);
-        debounceTimer = setTimeout(() => {
-          if (searchForm) {
-            searchForm.submit();
-          }
-        }, 500);
+        performLiveSearch(searchInput.value);
       });
     }
   });
