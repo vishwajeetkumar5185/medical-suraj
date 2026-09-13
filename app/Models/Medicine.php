@@ -52,6 +52,9 @@ class Medicine extends Model
 
     protected $appends = [
         'images',
+        'real_mrp',
+        'final_price',
+        'discount_percent',
     ];
 
     public function getImagesAttribute()
@@ -74,6 +77,39 @@ class Medicine extends Model
         }
 
         return [];
+    }
+
+    public function getRealMrpAttribute()
+    {
+        return $this->mrp > 0 ? (float)$this->mrp : (float)$this->price;
+    }
+
+    public function getFinalPriceAttribute()
+    {
+        $mrp = $this->real_mrp;
+        $active = Setting::getVal('flat_discount_active', 'false') === 'true';
+        $type = Setting::getVal('flat_discount_type', 'flat');
+        $val = (float) Setting::getVal('flat_discount_value', '0');
+
+        if ($active && $val > 0) {
+            if ($type === 'percent') {
+                $discAmt = round(($mrp * $val) / 100, 2);
+                return max(0, $mrp - $discAmt);
+            } else {
+                return max(0, $mrp - min($mrp, $val));
+            }
+        }
+        return $mrp;
+    }
+
+    public function getDiscountPercentAttribute()
+    {
+        $mrp = $this->real_mrp;
+        $final = $this->final_price;
+        if ($mrp > 0 && $final < $mrp) {
+            return round((($mrp - $final) / $mrp) * 100);
+        }
+        return 0;
     }
 
     public function getGenericNameAttribute()

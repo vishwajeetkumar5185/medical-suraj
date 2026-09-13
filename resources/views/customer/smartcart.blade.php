@@ -75,7 +75,15 @@
 
           <!-- Price & Action -->
           <div style="flex-shrink:0; text-align:right;">
-            <div style="font-size:16px; font-weight:700; color:#1f2937; margin-bottom:6px;">₹{{ number_format($med->price, 2) }}</div>
+            <div style="display:flex; flex-direction:column; align-items:flex-end; gap:2px; margin-bottom:6px;">
+              <div style="font-size:16px; font-weight:800; color:#1f2937;">₹{{ number_format($med->final_price ?? $med->price, 2) }}</div>
+              @if(!empty($med->discount_percent) && $med->discount_percent > 0)
+                <div style="display:flex; align-items:center; gap:4px;">
+                  <span style="font-size:11px; color:#94A3B8; text-decoration:line-through;">₹{{ number_format($med->real_mrp ?? $med->mrp, 2) }}</span>
+                  <span style="font-size:10px; color:#10B981; font-weight:800; background:#E8F5E9; padding:1px 4px; border-radius:3px;">{{ $med->discount_percent }}% OFF</span>
+                </div>
+              @endif
+            </div>
             
             @if($qty == 0)
               <form action="{{ url('/cart/add') }}" method="POST" class="cart-form" style="margin:0;">

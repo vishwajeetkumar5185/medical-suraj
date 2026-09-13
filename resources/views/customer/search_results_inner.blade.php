@@ -31,8 +31,12 @@
           <a href="{{ $detailUrl }}" style="text-decoration:none; display:block; color:inherit;">
             <div style="font-weight:800; font-size:13.5px; color:#1A1A1A; line-height:1.2; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ $med->name }}</div>
             <div style="font-size:10.5px; color:#718096; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ $med->category }}</div>
-            <div style="display:flex; flex-wrap:wrap; gap:4px; align-items:center; margin-top:2px;">
-              <div style="font-size:14px; font-weight:800; color:#1A3C8F; white-space:nowrap;">₹{{ $med->mrp }}</div>
+            <div style="display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin-top:2px;">
+              <div style="font-size:14px; font-weight:800; color:#1A3C8F; white-space:nowrap;">₹{{ number_format($med->final_price, 2) }}</div>
+              @if($med->discount_percent > 0)
+                <div style="font-size:11px; color:#94A3B8; text-decoration:line-through; white-space:nowrap;">₹{{ number_format($med->real_mrp, 2) }}</div>
+                <div style="font-size:10px; color:#10B981; font-weight:800; background:#E8F5E9; padding:1px 4px; border-radius:3px;">{{ $med->discount_percent }}% OFF</div>
+              @endif
             </div>
           </a>
         </div>

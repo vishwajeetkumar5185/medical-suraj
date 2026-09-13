@@ -74,8 +74,12 @@
             
             <div style="font-size:11px; color:#64748B; font-weight:600; margin-bottom:8px;">{{ $medicine->category }}</div>
             
-            <div style="display:flex; align-items:center; gap:6px; margin-bottom:12px;">
-              <span style="font-size:16px; font-weight:800; color:#1A1A1A;">₹{{ number_format($medicine->mrp > 0 ? $medicine->mrp : $medicine->price, 2) }}</span>
+            <div style="display:flex; align-items:center; gap:6px; margin-bottom:12px; flex-wrap:wrap;">
+              <span style="font-size:16px; font-weight:800; color:#1A1A1A;">₹{{ number_format($medicine->final_price, 2) }}</span>
+              @if($medicine->discount_percent > 0)
+                <span style="font-size:12px; color:#94A3B8; text-decoration:line-through;">₹{{ number_format($medicine->real_mrp, 2) }}</span>
+                <span style="font-size:10px; color:#10B981; font-weight:800; background:#E8F5E9; padding:2px 6px; border-radius:4px;">{{ $medicine->discount_percent }}% OFF</span>
+              @endif
             </div>
           </a>
           

@@ -96,7 +96,15 @@
 
           <!-- Price & Action -->
           <div style="flex-shrink:0; text-align:right;">
-            <div style="font-size:16px; font-weight:700; color:#1f2937; margin-bottom:6px;">₹{{ number_format($med->mrp > 0 ? $med->mrp : $med->price, 2) }}</div>
+            <div style="display:flex; flex-direction:column; align-items:flex-end; gap:2px; margin-bottom:6px;">
+              <div style="font-size:16px; font-weight:800; color:#1f2937;">₹{{ number_format($med->final_price, 2) }}</div>
+              @if($med->discount_percent > 0)
+                <div style="display:flex; align-items:center; gap:4px;">
+                  <span style="font-size:11px; color:#94A3B8; text-decoration:line-through;">₹{{ number_format($med->real_mrp, 2) }}</span>
+                  <span style="font-size:10px; color:#10B981; font-weight:800; background:#E8F5E9; padding:1px 4px; border-radius:3px;">{{ $med->discount_percent }}% OFF</span>
+                </div>
+              @endif
+            </div>
             
             @if($qty == 0)
               <form action="{{ url('/cart/add') }}" method="POST" class="cart-form" style="margin:0;">
@@ -263,8 +271,18 @@
                   imgHtml = `<img src="${imgUrl}" style="width:38px; height:38px; object-fit:contain; border-radius:8px; border:1px solid #E2E8F0; flex-shrink:0;" onerror="this.onerror=null; this.outerHTML='<div style=\\'width:38px; height:38px; background:#F1F5F9; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0;\\'>💊</div>';">`;
                 }
 
-                const price = (parseFloat(med.mrp || 0) > 0 ? parseFloat(med.mrp) : parseFloat(med.price || 0)).toFixed(2);
+                const finalPrice = parseFloat(med.final_price || med.price || 0).toFixed(2);
+                const realMrp = parseFloat(med.real_mrp || med.mrp || 0).toFixed(2);
+                const discPercent = parseInt(med.discount_percent || 0);
                 const category = med.category || 'General';
+
+                let priceHtml = `<div style="font-size:13px; font-weight:800; color:#0EA5E9;">₹${finalPrice}</div>`;
+                if (discPercent > 0) {
+                  priceHtml += `<div style="display:flex; align-items:center; justify-content:flex-end; gap:3px;">
+                    <span style="font-size:10px; color:#94A3B8; text-decoration:line-through;">₹${realMrp}</span>
+                    <span style="font-size:9px; color:#10B981; font-weight:800; background:#E8F5E9; padding:1px 3px; border-radius:3px;">${discPercent}% OFF</span>
+                  </div>`;
+                }
 
                 html += `
                   <div style="display:flex; align-items:center; gap:10px; padding:10px 14px; border-bottom:1px solid #F1F5F9; transition:background 0.15s ease;" onmouseover="this.style.background='#F8FAFC'" onmouseout="this.style.background='#FFFFFF'">
@@ -281,7 +299,7 @@
                     </a>
                     <div style="text-align:right; flex-shrink:0; display:flex; align-items:center; gap:8px;">
                       <div>
-                        <div style="font-size:13px; font-weight:800; color:#0EA5E9;">₹${price}</div>
+                        ${priceHtml}
                       </div>
                       <button 
                         type="button" 

@@ -181,8 +181,12 @@
         <p style="font-size:12px; color:#64748B; margin-bottom:12px;">{{ $medicine->packaging_detail }}</p>
       @endif
 
-      <div style="display:flex; align-items:baseline; gap:12px; margin-bottom:16px;">
-        <span style="font-size:24px; font-weight:800; color:#0EA5E9;">₹{{ number_format($price, 2) }}</span>
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px; flex-wrap:wrap;">
+        <span style="font-size:26px; font-weight:800; color:#0EA5E9;">₹{{ number_format($medicine->final_price, 2) }}</span>
+        @if($medicine->discount_percent > 0)
+          <span style="font-size:16px; color:#94A3B8; text-decoration:line-through; font-weight:600;">₹{{ number_format($medicine->real_mrp, 2) }}</span>
+          <span style="background:#E8F5E9; color:#10B981; font-size:12px; font-weight:800; padding:4px 8px; border-radius:6px; border:1px solid #A7F3D0;">{{ $medicine->discount_percent }}% OFF</span>
+        @endif
       </div>
 
       <!-- Add to Cart Controls -->
@@ -251,7 +255,13 @@
               <div style="font-weight:700; font-size:12px; color:#1A1A1A; overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; height:32px; line-height:1.3; margin-bottom:6px;">
                 {{ $rel->name }}
               </div>
-              <div style="font-weight:800; font-size:14px; color:#0EA5E9; margin-bottom:8px;">₹{{ number_format($rel->mrp > 0 ? $rel->mrp : $rel->price, 2) }}</div>
+              <div style="display:flex; align-items:center; gap:4px; margin-bottom:8px; flex-wrap:wrap;">
+                <span style="font-weight:800; font-size:14px; color:#0EA5E9;">₹{{ number_format($rel->final_price, 2) }}</span>
+                @if($rel->discount_percent > 0)
+                  <span style="font-size:10px; color:#94A3B8; text-decoration:line-through;">₹{{ number_format($rel->real_mrp, 2) }}</span>
+                  <span style="font-size:9px; color:#10B981; font-weight:800; background:#E8F5E9; padding:1px 4px; border-radius:3px;">{{ $rel->discount_percent }}% OFF</span>
+                @endif
+              </div>
             </a>
             
             @if($relQty == 0)
