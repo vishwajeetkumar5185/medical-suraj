@@ -62,6 +62,45 @@
     </a>
   </div>
 
+  <!-- Notification Control Banners & Audio Alert Toggle for Admin -->
+  <div style="margin-bottom:16px;">
+    <!-- Push Notifications OFF Banner -->
+    <div id="push-notification-banner" style="display:none; background:#FFFBEB; border:1px solid #FCD34D; border-radius:16px; padding:12px 14px; margin-bottom:10px; align-items:center; justify-content:space-between; gap:12px;">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span style="font-size:20px;">🔕</span>
+        <div style="text-align:left;">
+          <div style="font-weight:800; font-size:12.5px; color:#92400E;">Admin Web Push Notification OFF</div>
+          <div style="font-size:10px; color:#B45309; margin-top:1px;">Get instant device alerts whenever a customer places an order!</div>
+        </div>
+      </div>
+      <button onclick="requestPushSubscription()" style="background:#D97706; color:#fff; border:none; padding:6px 14px; font-size:11px; font-weight:800; border-radius:8px; cursor:pointer;">Turn ON 🔔</button>
+    </div>
+
+    <!-- Push Notifications ON Banner -->
+    <div id="push-enabled-banner" style="display:none; background:#F0FDF4; border:1px solid #86EFAC; border-radius:16px; padding:12px 14px; margin-bottom:10px; align-items:center; justify-content:space-between; gap:12px;">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span style="font-size:20px;">✅</span>
+        <div style="text-align:left;">
+          <div style="font-weight:800; font-size:12.5px; color:#14532D;">Admin Web Push Notification ON</div>
+          <div style="font-size:10px; color:#166534; margin-top:1px;">You will receive instant Web Push alerts for all new orders.</div>
+        </div>
+      </div>
+      <button onclick="disablePushSubscription()" style="background:#DC2626; color:#fff; border:none; padding:6px 14px; font-size:11px; font-weight:800; border-radius:8px; cursor:pointer;">Turn OFF 🔕</button>
+    </div>
+
+    <!-- Admin Audio Sound Alert Toggle Card -->
+    <div style="background:#EEF2FF; border:1px solid #C7D2FE; border-radius:16px; padding:12px 14px; display:flex; align-items:center; justify-content:space-between; gap:12px;">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span style="font-size:20px;" id="admin-sound-icon">🔊</span>
+        <div style="text-align:left;">
+          <div style="font-weight:800; font-size:12.5px; color:#1E3A8A;">Admin Sound Chime Alert</div>
+          <div style="font-size:10px; color:#3B82F6; margin-top:1px;" id="admin-sound-status-text">Audio chime active when new order arrives</div>
+        </div>
+      </div>
+      <button type="button" id="admin-sound-btn" onclick="toggleAdminSound()" style="background:#2563EB; color:#fff; border:none; padding:6px 14px; font-size:11px; font-weight:800; border-radius:8px; cursor:pointer; transition:all 0.2s;">Sound ON 🔊</button>
+    </div>
+  </div>
+
   <!-- Status Filter Tabs -->
   <div style="display:flex; gap:6px; overflow-x:auto; padding-bottom:6px; margin-bottom:16px;">
     <a href="{{ url('/admin/orders?status=all') }}" style="text-decoration:none; padding:6px 12px; border-radius:20px; font-size:11.5px; font-weight:800; white-space:nowrap; {{ $status === 'all' ? 'background:#1E3A8A; color:#fff;' : 'background:#E5E7EB; color:#4B5563;' }}">

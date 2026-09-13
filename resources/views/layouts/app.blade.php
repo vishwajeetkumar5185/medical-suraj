@@ -1198,14 +1198,81 @@ function autoDetectCity() {
         });
     };
 
+    // ==========================================
+    // Web Audio API Order Chime & Admin Sound Toggle Helper
+    // ==========================================
+    window.playOrderChime = function() {
+        try {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc1 = ctx.createOscillator();
+            const osc2 = ctx.createOscillator();
+            const gain = ctx.createGain();
+
+            osc1.type = 'sine';
+            osc2.type = 'sine';
+
+            osc1.frequency.setValueAtTime(659.25, ctx.currentTime);
+            osc1.frequency.setValueAtTime(880.00, ctx.currentTime + 0.15);
+
+            osc2.frequency.setValueAtTime(830.61, ctx.currentTime);
+            osc2.frequency.setValueAtTime(1046.50, ctx.currentTime + 0.15);
+
+            gain.gain.setValueAtTime(0.3, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.6);
+
+            osc1.connect(gain);
+            osc2.connect(gain);
+            gain.connect(ctx.destination);
+
+            osc1.start();
+            osc2.start();
+            osc1.stop(ctx.currentTime + 0.6);
+            osc2.stop(ctx.currentTime + 0.6);
+        } catch(e) {
+            console.error('Audio chime error:', e);
+        }
+    };
+
+    window.updateAdminSoundUI = function(enabled) {
+        const btn = document.getElementById('admin-sound-btn');
+        const icon = document.getElementById('admin-sound-icon');
+        const statusText = document.getElementById('admin-sound-status-text');
+        if (!btn) return;
+
+        if (enabled) {
+            btn.textContent = 'Sound ON 🔊';
+            btn.style.background = '#2563EB';
+            if (icon) icon.textContent = '🔊';
+            if (statusText) statusText.textContent = 'Audio chime active when new order arrives';
+        } else {
+            btn.textContent = 'Sound OFF 🔕';
+            btn.style.background = '#6B7280';
+            if (icon) icon.textContent = '🔕';
+            if (statusText) statusText.textContent = 'Muted — audio chime is disabled';
+        }
+    };
+
+    window.toggleAdminSound = function() {
+        const current = localStorage.getItem('admin_sound_enabled') !== 'false';
+        const nextState = !current;
+        localStorage.setItem('admin_sound_enabled', nextState ? 'true' : 'false');
+        updateAdminSoundUI(nextState);
+        if (nextState) {
+            playOrderChime();
+        }
+    };
+
     // ── Auto-detect state on page load ────────────────────────────────────────
     document.addEventListener('DOMContentLoaded', () => {
+        // Init Admin Sound UI
+        const soundEnabled = localStorage.getItem('admin_sound_enabled') !== 'false';
+        updateAdminSoundUI(soundEnabled);
+
         const enableBanner  = document.getElementById('push-notification-banner');
         const enabledBanner = document.getElementById('push-enabled-banner');
-        if (!enableBanner || !enabledBanner) return; // Only run on shop dashboard
+        if (!enableBanner || !enabledBanner) return; // Only run on dashboard pages
 
         if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-            // Browser doesn't support push, show enable banner anyway (will show error on click)
             showPushBanner(false);
             return;
         }
