@@ -183,12 +183,6 @@
 
       <div style="display:flex; align-items:baseline; gap:12px; margin-bottom:16px;">
         <span style="font-size:24px; font-weight:800; color:#0EA5E9;">₹{{ number_format($price, 2) }}</span>
-        @if($medicine->mrp > $price)
-          <span style="font-size:14px; color:#94A3B8; text-decoration:line-through;">₹{{ number_format($medicine->mrp, 2) }}</span>
-          <span style="background:#DCFCE7; color:#166534; font-size:11px; font-weight:700; padding:4px 8px; border-radius:12px;">
-            {{ round((($medicine->mrp - $price) / $medicine->mrp) * 100) }}% OFF
-          </span>
-        @endif
       </div>
 
       <!-- Add to Cart Controls -->

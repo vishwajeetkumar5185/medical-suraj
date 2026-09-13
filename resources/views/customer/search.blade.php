@@ -283,7 +283,6 @@
                     <div style="text-align:right; flex-shrink:0; display:flex; align-items:center; gap:8px;">
                       <div>
                         <div style="font-size:13px; font-weight:800; color:#0EA5E9;">₹${price}</div>
-                        ${parseFloat(mrp) > parseFloat(price) ? `<div style="font-size:10px; color:#94A3B8; text-decoration:line-through;">₹${mrp}</div>` : ''}
                       </div>
                       <button 
                         type="button" 

@@ -283,9 +283,6 @@
         <div id="popular-medicines-carousel" style="display:flex; gap:12px; overflow-x:auto; padding-bottom:8px; -webkit-overflow-scrolling:touch; scrollbar-width:none; -ms-overflow-style:none;">
           @foreach($popularMedicines as $index => $medicine)
           <div class="medicine-card" style="min-width:150px; max-width:150px; background:#fff; border-radius:16px; padding:14px; box-shadow:0 2px 12px rgba(0,0,0,0.08); position:relative; flex-shrink:0;">
-            @if($index == 0)
-              <div style="position:absolute; top:10px; left:10px; background:#10B981; color:#fff; font-size:10px; font-weight:800; padding:5px 10px; border-radius:8px; z-index:1;">10% OFF</div>
-            @endif
             <a href="{{ url('/medicine/'.$medicine->id) }}" style="text-decoration:none; display:block;">
               <div style="width:100%; height:100px; background:#F8FAFC; border-radius:12px; margin-bottom:12px; display:flex; align-items:center; justify-content:center; overflow:hidden; padding:8px;">
                 @if(!empty($medicine->images))
@@ -306,12 +303,7 @@
               </div>
               <div style="font-size:13px; font-weight:800; color:#1A1A1A; margin-bottom:6px; overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; line-height:1.3; min-height:34px;">{{ $medicine->name }}</div>
               <div style="display:flex; align-items:center; gap:6px; margin-bottom:10px; flex-wrap:wrap;">
-                @if($medicine->mrp && $medicine->price < $medicine->mrp)
-                  <span style="font-size:15px; font-weight:800; color:#1A1A1A;">₹{{ number_format($medicine->price, 0) }}</span>
-                  <span style="font-size:11px; color:#94A3B8; text-decoration:line-through;">₹{{ number_format($medicine->mrp, 0) }}</span>
-                @else
-                  <span style="font-size:15px; font-weight:800; color:#1A1A1A;">₹{{ number_format($medicine->price, 0) }}</span>
-                @endif
+                <span style="font-size:15px; font-weight:800; color:#1A1A1A;">₹{{ number_format($medicine->price, 0) }}</span>
               </div>
             </a>
             <form action="{{ url('/cart/add') }}" method="POST" class="cart-form" style="margin:0;">
@@ -880,7 +872,6 @@ function redirectToSearchPage() {
                       <div style="text-align:right; flex-shrink:0; display:flex; align-items:center; gap:8px;">
                         <div>
                           <div style="font-size:13px; font-weight:800; color:#0EA5E9;">₹${price}</div>
-                          ${parseFloat(mrp) > parseFloat(price) ? `<div style="font-size:10px; color:#94A3B8; text-decoration:line-through;">₹${mrp}</div>` : ''}
                         </div>
                         <button 
                           type="button" 

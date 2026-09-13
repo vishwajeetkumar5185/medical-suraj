@@ -178,9 +178,6 @@
                   <div style="font-weight:800; font-size:15px; color:#1A1A1A; margin-bottom:4px; line-height:1.3;">{{ $item->name }}</div>
                   <div style="font-size:12px; color:#64748B; margin-bottom:6px;">
                     ₹{{ number_format($item->price, 2) }} each
-                    @if($item->mrp > $item->price)
-                      <span style="text-decoration:line-through; color:#94A3B8; margin-left:4px;">₹{{ number_format($item->mrp, 2) }}</span>
-                    @endif
                   </div>
                   <div style="font-weight:800; font-size:18px; color:#0EA5E9;">₹{{ number_format($subtotal, 2) }}</div>
                 </div>
