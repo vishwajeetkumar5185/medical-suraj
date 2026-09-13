@@ -22,16 +22,16 @@ class CartController extends Controller
                 ->orderBy('name', 'asc')
                 ->get()
                 ->map(function ($med) {
-                    $disc = $med->mrp > 0 ? round((($med->mrp - $med->price) / $med->mrp) * 100) : 0;
+                    $realPrice = $med->mrp > 0 ? (float)$med->mrp : (float)$med->price;
                     return (object) [
                         'id' => $med->id,
                         'name' => $med->name,
                         'category' => $med->category,
                         'composition' => $med->composition ?? 'Strip of tablets',
                         'emoji' => $med->emoji,
-                        'price' => (float)$med->price,
+                        'price' => $realPrice,
                         'mrp' => (float)$med->mrp,
-                        'disc' => $disc,
+                        'disc' => 0,
                         'images' => $med->images
                     ];
                 });
@@ -110,7 +110,8 @@ class CartController extends Controller
         $cartItems = Medicine::whereIn('id', array_keys($cart))->get();
         $cartTotal = 0;
         foreach ($cartItems as $med) {
-            $cartTotal += (float)$med->price * ($cart[$med->id] ?? 1);
+            $realPrice = $med->mrp > 0 ? (float)$med->mrp : (float)$med->price;
+            $cartTotal += $realPrice * ($cart[$med->id] ?? 1);
         }
 
         if ($coupon->min_order_amount > 0 && $cartTotal < $coupon->min_order_amount) {
@@ -162,7 +163,9 @@ class CartController extends Controller
         $itemsTotal = 0;
         foreach ($cartItems as $med) {
             $qty = $cart[$med->id] ?? 1;
-            $itemsTotal += (float)$med->price * $qty;
+            $realPrice = $med->mrp > 0 ? (float)$med->mrp : (float)$med->price;
+            $med->price = $realPrice;
+            $itemsTotal += $realPrice * $qty;
         }
 
         // Global Delivery Charges & Minimum Order Rules from Admin Settings
