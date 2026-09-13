@@ -865,21 +865,34 @@ function redirectToSearchPage() {
                   const category = med.category || 'General';
 
                   html += `
-                    <a href="{{ url('/medicine') }}/${med.id}" style="text-decoration:none; color:inherit; display:flex; align-items:center; gap:12px; padding:10px 14px; border-bottom:1px solid #F1F5F9; transition:background 0.15s ease;" onmouseover="this.style.background='#F8FAFC'" onmouseout="this.style.background='#FFFFFF'">
-                      ${imgHtml}
-                      <div style="flex:1; min-width:0;">
-                        <div style="font-size:14px; font-weight:700; color:#1E293B; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
-                          ${highlightMatch(med.name, query.trim())}
+                    <div style="display:flex; align-items:center; gap:10px; padding:10px 14px; border-bottom:1px solid #F1F5F9; transition:background 0.15s ease;" onmouseover="this.style.background='#F8FAFC'" onmouseout="this.style.background='#FFFFFF'">
+                      <a href="{{ url('/medicine') }}/${med.id}" style="text-decoration:none; color:inherit; display:flex; align-items:center; gap:10px; flex:1; min-width:0;">
+                        ${imgHtml}
+                        <div style="flex:1; min-width:0;">
+                          <div style="font-size:14px; font-weight:700; color:#1E293B; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                            ${highlightMatch(med.name, query.trim())}
+                          </div>
+                          <div style="font-size:11px; color:#64748B; margin-top:1px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                            ${med.composition ? escapeHtml(med.composition) + ' • ' : ''}<span style="color:#0EA5E9; font-weight:600;">${escapeHtml(category)}</span>
+                          </div>
                         </div>
-                        <div style="font-size:11px; color:#64748B; margin-top:1px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
-                          ${med.composition ? escapeHtml(med.composition) + ' • ' : ''}<span style="color:#0EA5E9; font-weight:600;">${escapeHtml(category)}</span>
+                      </a>
+                      <div style="text-align:right; flex-shrink:0; display:flex; align-items:center; gap:8px;">
+                        <div>
+                          <div style="font-size:13px; font-weight:800; color:#0EA5E9;">₹${price}</div>
+                          ${parseFloat(mrp) > parseFloat(price) ? `<div style="font-size:10px; color:#94A3B8; text-decoration:line-through;">₹${mrp}</div>` : ''}
                         </div>
+                        <button 
+                          type="button" 
+                          onclick="addSuggestionToCart(event, ${med.id}, this)" 
+                          style="background:#0EA5E9; color:#fff; border:none; border-radius:8px; padding:6px 12px; font-size:12px; font-weight:800; cursor:pointer; transition:all 0.2s ease; flex-shrink:0;"
+                          onmouseover="this.style.background='#0284C7'"
+                          onmouseout="this.style.background='#0EA5E9'"
+                        >
+                          + ADD
+                        </button>
                       </div>
-                      <div style="text-align:right; flex-shrink:0;">
-                        <div style="font-size:13px; font-weight:800; color:#0EA5E9;">₹${price}</div>
-                        ${parseFloat(mrp) > parseFloat(price) ? `<div style="font-size:10px; color:#94A3B8; text-decoration:line-through;">₹${mrp}</div>` : ''}
-                      </div>
-                    </a>`;
+                    </div>`;
                 } catch(e) {
                   console.error('Error rendering suggestion item:', e);
                 }
@@ -921,5 +934,59 @@ function redirectToSearchPage() {
       });
     }
   })();
+
+  // Global helper to add medicine directly to cart from suggestions dropdown
+  window.addSuggestionToCart = function(e, medicineId, btn) {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    const originalText = btn.textContent;
+    btn.textContent = '...';
+    btn.disabled = true;
+
+    const formData = new FormData();
+    formData.append('_token', '{{ csrf_token() }}');
+    formData.append('medicine_id', medicineId);
+    formData.append('quantity', 1);
+
+    fetch("{{ url('/cart/add') }}", {
+      method: 'POST',
+      body: formData,
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        btn.textContent = '✓ Added';
+        btn.style.background = '#10B981';
+        
+        // Update cart count badge in bottom navigation
+        const cartBadge = document.querySelector('.bottom-nav-cart-badge');
+        if (cartBadge) {
+          cartBadge.textContent = data.cartCount;
+          cartBadge.style.display = data.cartCount > 0 ? 'block' : 'none';
+        }
+
+        setTimeout(() => {
+          btn.textContent = originalText;
+          btn.style.background = '#0EA5E9';
+          btn.disabled = false;
+        }, 1500);
+      } else {
+        alert(data.message || 'Failed to add item to cart');
+        btn.textContent = originalText;
+        btn.disabled = false;
+      }
+    })
+    .catch(err => {
+      console.error(err);
+      alert('Error adding item to cart');
+      btn.textContent = originalText;
+      btn.disabled = false;
+    });
+  };
 </script>
 
