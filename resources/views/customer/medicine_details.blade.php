@@ -251,7 +251,7 @@
               <div style="font-weight:700; font-size:12px; color:#1A1A1A; overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; height:32px; line-height:1.3; margin-bottom:6px;">
                 {{ $rel->name }}
               </div>
-              <div style="font-weight:800; font-size:14px; color:#0EA5E9; margin-bottom:8px;">₹{{ number_format($rel->price, 2) }}</div>
+              <div style="font-weight:800; font-size:14px; color:#0EA5E9; margin-bottom:8px;">₹{{ number_format($rel->mrp > 0 ? $rel->mrp : $rel->price, 2) }}</div>
             </a>
             
             @if($relQty == 0)

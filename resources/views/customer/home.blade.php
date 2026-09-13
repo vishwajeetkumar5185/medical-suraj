@@ -303,7 +303,7 @@
               </div>
               <div style="font-size:13px; font-weight:800; color:#1A1A1A; margin-bottom:6px; overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; line-height:1.3; min-height:34px;">{{ $medicine->name }}</div>
               <div style="display:flex; align-items:center; gap:6px; margin-bottom:10px; flex-wrap:wrap;">
-                <span style="font-size:15px; font-weight:800; color:#1A1A1A;">₹{{ number_format($medicine->price, 0) }}</span>
+                <span style="font-size:15px; font-weight:800; color:#1A1A1A;">₹{{ number_format($medicine->mrp > 0 ? $medicine->mrp : $medicine->price, 2) }}</span>
               </div>
             </a>
             <form action="{{ url('/cart/add') }}" method="POST" class="cart-form" style="margin:0;">
@@ -852,8 +852,7 @@ function redirectToSearchPage() {
                     imgHtml = `<img src="${imgUrl}" style="width:38px; height:38px; object-fit:contain; border-radius:8px; border:1px solid #E2E8F0; flex-shrink:0;" onerror="this.onerror=null; this.outerHTML='<div style=\\'width:38px; height:38px; background:#F1F5F9; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0;\\'>💊</div>';">`;
                   }
 
-                  const price = parseFloat(med.price || 0).toFixed(2);
-                  const mrp = parseFloat(med.mrp || 0).toFixed(2);
+                  const price = (parseFloat(med.mrp || 0) > 0 ? parseFloat(med.mrp) : parseFloat(med.price || 0)).toFixed(2);
                   const category = med.category || 'General';
 
                   html += `

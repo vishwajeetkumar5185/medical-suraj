@@ -96,7 +96,7 @@
 
           <!-- Price & Action -->
           <div style="flex-shrink:0; text-align:right;">
-            <div style="font-size:16px; font-weight:700; color:#1f2937; margin-bottom:6px;">₹{{ number_format($med->price, 2) }}</div>
+            <div style="font-size:16px; font-weight:700; color:#1f2937; margin-bottom:6px;">₹{{ number_format($med->mrp > 0 ? $med->mrp : $med->price, 2) }}</div>
             
             @if($qty == 0)
               <form action="{{ url('/cart/add') }}" method="POST" class="cart-form" style="margin:0;">
@@ -263,8 +263,7 @@
                   imgHtml = `<img src="${imgUrl}" style="width:38px; height:38px; object-fit:contain; border-radius:8px; border:1px solid #E2E8F0; flex-shrink:0;" onerror="this.onerror=null; this.outerHTML='<div style=\\'width:38px; height:38px; background:#F1F5F9; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0;\\'>💊</div>';">`;
                 }
 
-                const price = parseFloat(med.price || 0).toFixed(2);
-                const mrp = parseFloat(med.mrp || 0).toFixed(2);
+                const price = (parseFloat(med.mrp || 0) > 0 ? parseFloat(med.mrp) : parseFloat(med.price || 0)).toFixed(2);
                 const category = med.category || 'General';
 
                 html += `

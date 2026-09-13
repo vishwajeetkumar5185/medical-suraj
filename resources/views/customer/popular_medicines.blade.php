@@ -75,16 +75,7 @@
             <div style="font-size:11px; color:#64748B; font-weight:600; margin-bottom:8px;">{{ $medicine->category }}</div>
             
             <div style="display:flex; align-items:center; gap:6px; margin-bottom:12px;">
-              @if($medicine->mrp && $medicine->price < $medicine->mrp)
-                <span style="font-size:16px; font-weight:800; color:#1A1A1A;">₹{{ number_format($medicine->price, 0) }}</span>
-                <span style="font-size:12px; color:#94A3B8; text-decoration:line-through;">₹{{ number_format($medicine->mrp, 0) }}</span>
-                @php
-                  $discount = round((($medicine->mrp - $medicine->price) / $medicine->mrp) * 100);
-                @endphp
-                <span style="font-size:10px; color:#10B981; font-weight:700; background:#E8F5E9; padding:2px 6px; border-radius:4px;">{{ $discount }}% OFF</span>
-              @else
-                <span style="font-size:16px; font-weight:800; color:#1A1A1A;">₹{{ number_format($medicine->price, 0) }}</span>
-              @endif
+              <span style="font-size:16px; font-weight:800; color:#1A1A1A;">₹{{ number_format($medicine->mrp > 0 ? $medicine->mrp : $medicine->price, 2) }}</span>
             </div>
           </a>
           

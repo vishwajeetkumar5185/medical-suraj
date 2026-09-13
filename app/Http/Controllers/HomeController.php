@@ -173,7 +173,7 @@ class HomeController extends Controller
         $medicine = Medicine::findOrFail($id);
         $shopId = $request->input('shop_id');
         $selectedShop = null;
-        $price = $medicine->price;
+        $price = $medicine->mrp > 0 ? (float)$medicine->mrp : (float)$medicine->price;
 
         if ($shopId) {
             $selectedShop = Shop::find($shopId);
