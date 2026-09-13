@@ -44,6 +44,10 @@
           <button type="submit" style="background:none; border:none; padding:0; cursor:pointer; font-size:14px; color:#0EA5E9; font-weight:700;">Search</button>
         </div>
       </form>
+
+      <!-- Instant Live Suggestions Dropdown Container -->
+      <div id="page-search-suggestions" style="display:none; position:absolute; top:calc(100% + 6px); left:0; right:0; background:#fff; border-radius:14px; box-shadow:0 10px 30px rgba(0,0,0,0.18); z-index:9999; max-height:380px; overflow-y:auto; border:1px solid #E2E8F0; padding:6px 0;">
+      </div>
     </div>
   </div>
 
@@ -181,12 +185,14 @@
     });
   }
 
-  // Smooth Live Search on Normal Screen (Search Page)
+  // Smooth Live Search and Auto-suggestions on Search Page
   document.addEventListener('DOMContentLoaded', function() {
     bindCartForms();
 
     const searchInput = document.getElementById('page-search-input');
     const searchForm = document.getElementById('page-search-form') || (searchInput ? searchInput.closest('form') : null);
+    const suggestionsBox = document.getElementById('page-search-suggestions');
+    const searchWrapper = document.getElementById('page-search-wrapper');
     const resultsContainer = document.getElementById('search-results-container');
     let debounceTimer = null;
 
@@ -197,6 +203,114 @@
     searchInput.focus();
     if (typeof searchInput.setSelectionRange === 'function') {
       searchInput.setSelectionRange(val.length, val.length);
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function highlightMatch(text, q) {
+      if (!text || !q) return escapeHtml(text);
+      const escaped = escapeHtml(text);
+      const regex = new RegExp('(' + q.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&') + ')', 'gi');
+      return escaped.replace(regex, '<mark style="background:#FEF08A; color:#000; padding:0 2px; border-radius:3px;">$1</mark>');
+    }
+
+    function fetchSuggestions(query) {
+      if (!suggestionsBox) return;
+      const cleanQ = query.trim();
+      if (cleanQ.length < 1) {
+        suggestionsBox.style.display = 'none';
+        suggestionsBox.innerHTML = '';
+        return;
+      }
+
+      fetch("{{ url('/medicines/search') }}?q=" + encodeURIComponent(cleanQ))
+        .then(res => res.json())
+        .then(data => {
+          if (!data || !Array.isArray(data) || data.length === 0) {
+            suggestionsBox.innerHTML = `
+              <div style="padding:14px 16px; text-align:center; color:#64748B; font-size:13px;">
+                <span>🔍</span> Koi medicine nahi mili "<strong>${escapeHtml(cleanQ)}</strong>" ke naam se.
+              </div>`;
+          } else {
+            let html = '';
+            data.forEach(med => {
+              try {
+                let imgHtml = '<div style="width:38px; height:38px; background:#F1F5F9; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0;">💊</div>';
+                
+                let firstImg = null;
+                if (med.images) {
+                  if (Array.isArray(med.images) && med.images.length > 0) {
+                    firstImg = med.images[0];
+                  } else if (typeof med.images === 'string') {
+                    let trimmed = med.images.trim();
+                    if (trimmed.startsWith('[')) {
+                      try {
+                        let parsed = JSON.parse(trimmed);
+                        if (Array.isArray(parsed) && parsed.length > 0) firstImg = parsed[0];
+                      } catch(e) {}
+                    } else {
+                      firstImg = trimmed;
+                    }
+                  }
+                }
+
+                if (typeof firstImg === 'string' && firstImg.trim() !== '') {
+                  const firstImgStr = firstImg.trim();
+                  const imgUrl = (firstImgStr.startsWith('http://') || firstImgStr.startsWith('https://')) ? firstImgStr : '{{ asset("") }}' + firstImgStr;
+                  imgHtml = `<img src="${imgUrl}" style="width:38px; height:38px; object-fit:contain; border-radius:8px; border:1px solid #E2E8F0; flex-shrink:0;" onerror="this.onerror=null; this.outerHTML='<div style=\\'width:38px; height:38px; background:#F1F5F9; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0;\\'>💊</div>';">`;
+                }
+
+                const price = parseFloat(med.price || 0).toFixed(2);
+                const mrp = parseFloat(med.mrp || 0).toFixed(2);
+                const category = med.category || 'General';
+
+                html += `
+                  <div style="display:flex; align-items:center; gap:10px; padding:10px 14px; border-bottom:1px solid #F1F5F9; transition:background 0.15s ease;" onmouseover="this.style.background='#F8FAFC'" onmouseout="this.style.background='#FFFFFF'">
+                    <a href="{{ url('/medicine') }}/${med.id}" style="text-decoration:none; color:inherit; display:flex; align-items:center; gap:10px; flex:1; min-width:0;">
+                      ${imgHtml}
+                      <div style="flex:1; min-width:0;">
+                        <div style="font-size:14px; font-weight:700; color:#1E293B; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                          ${highlightMatch(med.name, cleanQ)}
+                        </div>
+                        <div style="font-size:11px; color:#64748B; margin-top:1px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                          ${med.composition ? escapeHtml(med.composition) + ' • ' : ''}<span style="color:#0EA5E9; font-weight:600;">${escapeHtml(category)}</span>
+                        </div>
+                      </div>
+                    </a>
+                    <div style="text-align:right; flex-shrink:0; display:flex; align-items:center; gap:8px;">
+                      <div>
+                        <div style="font-size:13px; font-weight:800; color:#0EA5E9;">₹${price}</div>
+                        ${parseFloat(mrp) > parseFloat(price) ? `<div style="font-size:10px; color:#94A3B8; text-decoration:line-through;">₹${mrp}</div>` : ''}
+                      </div>
+                      <button 
+                        type="button" 
+                        onclick="addSuggestionToCart(event, ${med.id}, this)" 
+                        style="background:#0EA5E9; color:#fff; border:none; border-radius:8px; padding:6px 12px; font-size:12px; font-weight:800; cursor:pointer; transition:all 0.2s ease; flex-shrink:0;"
+                        onmouseover="this.style.background='#0284C7'"
+                        onmouseout="this.style.background='#0EA5E9'"
+                      >
+                        + ADD
+                      </button>
+                    </div>
+                  </div>`;
+              } catch(e) {
+                console.error('Error rendering suggestion item:', e);
+              }
+            });
+
+            html += `
+              <a href="{{ url('/search') }}?q=${encodeURIComponent(cleanQ)}" style="display:block; text-align:center; padding:10px 14px; background:#F0F9FF; color:#0EA5E9; font-size:13px; font-weight:700; text-decoration:none; border-radius:0 0 14px 14px;">
+                Sabhi "${escapeHtml(cleanQ)}" results dekhein →
+              </a>`;
+
+            suggestionsBox.innerHTML = html;
+          }
+          suggestionsBox.style.display = 'block';
+        })
+        .catch(err => console.error('Suggestions error:', err));
     }
 
     function performLiveSearch(query) {
@@ -226,16 +340,30 @@
 
     searchInput.addEventListener('input', function() {
       clearTimeout(debounceTimer);
-      const query = this.value; // Preserve exact characters & spaces
+      const query = this.value;
       debounceTimer = setTimeout(() => {
+        fetchSuggestions(query);
         performLiveSearch(query);
       }, 150);
+    });
+
+    searchInput.addEventListener('focus', function() {
+      if (this.value.trim().length >= 1) {
+        fetchSuggestions(this.value);
+      }
+    });
+
+    document.addEventListener('click', function(e) {
+      if (searchWrapper && !searchWrapper.contains(e.target)) {
+        if (suggestionsBox) suggestionsBox.style.display = 'none';
+      }
     });
 
     if (searchForm) {
       searchForm.addEventListener('submit', function(e) {
         e.preventDefault();
         clearTimeout(debounceTimer);
+        if (suggestionsBox) suggestionsBox.style.display = 'none';
         performLiveSearch(searchInput.value);
       });
     }
